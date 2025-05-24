@@ -23,6 +23,9 @@ async function main() {
     const response3 = await claude.chat('List the files in the current directory');
     console.log('Response:', response3);
     console.log('---\n');
+
+    console.log(await claude.version());
+    console.log(await claude.runCommand('what is current directory?'));
   } catch (error) {
     console.error('Error:', error);
   }
