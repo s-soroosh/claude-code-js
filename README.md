@@ -36,14 +36,20 @@ const claude = new ClaudeCode({
 
 ### Example Usage
 
-#### Chat with Claude
+#### Single Chat with Claude
 
 ```javascript
-// Send a chat message to Claude
-const response = await claude.chat('Explain this error: TypeError: Cannot read property of undefined');
+// Send a chat message to Claude with a prompt
+const response = await claude.chat({
+  prompt: 'Explain this error: TypeError: Cannot read property of undefined',
+  systemPrompt: 'You are a helpful coding assistant', // Optional
+  appendSystemPrompt: 'Keep explanations concise' // Optional
+});
 
 if (response.success) {
-  console.log(response.data);
+  console.log('Result:', response.message.result);
+  console.log('Session ID:', response.message.session_id);
+  console.log('Cost:', response.message.cost_usd);
 } else {
   console.error('Error:', response.error.message);
 }
@@ -52,14 +58,44 @@ if (response.success) {
 #### Run Commands Through Claude
 
 ```javascript
-// Have Claude run a command for you
+// Have Claude execute a task
 const result = await claude.runCommand('Fix the failing tests in src/utils.test.js');
 
-// Check the result
 if (result.success) {
   console.log('Claude completed the task');
-  console.log('Output:', result.stdout);
+  console.log('Result:', result.message.result);
+  console.log('Duration:', result.message.duration_ms, 'ms');
 }
+```
+
+#### Sessions for Multi-turn Conversations
+
+```javascript
+// Create a new session for ongoing conversations
+const session = await claude.newSession({
+  prompt: 'What is 2 + 2?',
+  systemPrompt: 'You are expert at math. Always return a single line of text in format: equation = result'
+});
+
+// Access the initial response
+const firstMessage = session.messages[0];
+console.log('First response:', firstMessage.result);
+
+// Continue the conversation
+const secondMessage = await session.prompt({
+  prompt: '3 + 3 = 6'
+});
+console.log('Second response:', secondMessage.result);
+
+// Ask for history
+const history = await session.prompt({
+  prompt: 'Send the history of all validations you have done so far'
+});
+console.log('History:', history.result);
+
+// Session tracks all messages and session IDs
+console.log('Total messages:', session.messages.length);
+console.log('All session IDs:', session.sessionIds);
 ```
 
 #### Direct Command Execution
@@ -83,7 +119,125 @@ const stream = streamCommand(['npm', 'run', 'dev'], {
 await stream;
 ```
 
+### Real-World Examples
+
+#### Code Review Assistant
+
+```javascript
+const claude = new ClaudeCode();
+
+// Create a code review session
+const reviewer = await claude.newSession({
+  prompt: `Review this Express route for security issues:
+    app.post('/login', (req, res) => {
+      const { username, password } = req.body;
+      const user = db.query('SELECT * FROM users WHERE username = "' + username + '"');
+      if (user && user.password === password) {
+        res.json({ token: jwt.sign({ id: user.id }, 'secret') });
+      }
+    })`,
+  systemPrompt: 'You are a security-focused code reviewer. Identify vulnerabilities and suggest fixes.'
+});
+
+console.log('Initial review:', reviewer.messages[0].result);
+
+// Ask for specific improvements
+const improvements = await reviewer.prompt({
+  prompt: 'Show me how to fix the SQL injection vulnerability'
+});
+console.log('Improved code:', improvements.result);
+```
+
+#### Test Generator
+
+```javascript
+const claude = new ClaudeCode({ workingDirectory: './my-app' });
+
+// Generate tests for a specific function
+const response = await claude.chat({
+  prompt: `Generate Jest unit tests for this function:
+    export function calculateDiscount(price, discountPercent) {
+      if (discountPercent < 0 || discountPercent > 100) {
+        throw new Error('Invalid discount percentage');
+      }
+      return price * (1 - discountPercent / 100);
+    }`,
+  systemPrompt: 'Generate comprehensive Jest tests with edge cases'
+});
+
+if (response.success) {
+  // Save the generated tests
+  await writeFile('./tests/calculateDiscount.test.js', response.message.result);
+}
+```
+
+#### Interactive Debugging Helper
+
+```javascript
+const debugSession = await claude.newSession({
+  prompt: 'I have a React component that re-renders infinitely. Help me debug it.',
+  systemPrompt: 'You are a React debugging expert. Ask clarifying questions and provide solutions.'
+});
+
+// Provide more context
+await debugSession.prompt({
+  prompt: `Here's my component:
+    function UserList() {
+      const [users, setUsers] = useState([]);
+      const fetchUsers = async () => {
+        const data = await api.getUsers();
+        setUsers(data);
+      };
+      fetchUsers();
+      return <div>{users.map(u => <div>{u.name}</div>)}</div>;
+    }`
+});
+
+// Get step-by-step debugging guidance
+const solution = await debugSession.prompt({
+  prompt: `What's causing the infinite re-render and how do I fix it?`
+});
+```
+
 ## Advanced Usage
+
+### Working with Multiple Sessions
+
+```javascript
+const claude = new ClaudeCode();
+
+// Create independent sessions for different tasks
+const codeReviewSession = await claude.newSession({
+  prompt: 'Review this code for best practices: function getData() { return fetch("/api").then(r => r.json()) }',
+  systemPrompt: 'You are a code reviewer focused on best practices and performance'
+});
+
+const debugSession = await claude.newSession({
+  prompt: 'Help me debug this error: ReferenceError: user is not defined',
+  systemPrompt: 'You are a debugging expert'
+});
+
+// Continue conversations independently
+await codeReviewSession.prompt({ prompt: 'How can I add error handling?' });
+await debugSession.prompt({ prompt: 'The error occurs in line 45 of auth.js' });
+```
+
+### Chaining Sessions
+
+```javascript
+// Use output from one session as input to another
+const mathSession = await claude.newSession({
+  prompt: 'Calculate 15 * 23',
+  systemPrompt: 'You are a math expert. Return only the numeric result.'
+});
+
+const validationSession = await claude.newSession({
+  prompt: mathSession.messages[0].result,
+  systemPrompt: 'You are expert at validating math calculations.'
+});
+
+console.log('Validation result:', validationSession.messages[0].result);
+```
 
 ### Configuration Management
 
@@ -111,7 +265,9 @@ console.log('Claude Code CLI version:', version);
 
 ```javascript
 try {
-  const response = await claude.chat('Refactor this function to use async/await');
+  const response = await claude.chat({
+    prompt: 'Refactor this function to use async/await'
+  });
   
   if (!response.success) {
     // Handle Claude Code specific errors
@@ -137,7 +293,9 @@ import {
   ClaudeCode, 
   ClaudeCodeOptions, 
   ClaudeCodeResponse,
-  ClaudeCodeError 
+  ClaudeCodeError,
+  ClaudeCodeMessage,
+  Prompt
 } from 'claude-code-js';
 
 // Type-safe configuration
@@ -150,8 +308,22 @@ const options: ClaudeCodeOptions = {
 
 const claude = new ClaudeCode(options);
 
+// Type-safe prompt
+const prompt: Prompt = {
+  prompt: 'Generate unit tests for auth.js',
+  systemPrompt: 'You are a test generation expert',
+  appendSystemPrompt: 'Use Jest framework'
+};
+
 // Type-safe response handling
-const response: ClaudeCodeResponse = await claude.chat('Generate unit tests for auth.js');
+const response: ClaudeCodeResponse = await claude.chat(prompt);
+
+if (response.success && response.message) {
+  const message: ClaudeCodeMessage = response.message;
+  console.log('Result:', message.result);
+  console.log('Cost in USD:', message.cost_usd);
+  console.log('Duration:', message.duration_ms);
+}
 ```
 
 ## Configuration Options
