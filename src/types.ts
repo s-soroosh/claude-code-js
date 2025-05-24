@@ -5,12 +5,22 @@ export interface ClaudeCodeOptions {
   verbose?: boolean;
 }
 
+export interface ClaudeCodeMessage {
+  type: 'result';
+  subtype: 'success';
+  cost_usd: number;
+  duration_ms: number;
+  duration_api_ms: number;
+  is_error: boolean;
+  num_turns: number;
+  result: string;
+  session_id: string;
+}
+
 export interface ClaudeCodeResponse {
   success: boolean;
-  data?: any;
+  message?: ClaudeCodeMessage;
   error?: ClaudeCodeError;
-  stdout?: string;
-  stderr?: string;
   exitCode?: number;
 }
 
@@ -31,13 +41,4 @@ export interface Prompt {
   prompt: string;
   systemPrompt?: string;
   appendSystemPrompt?: string;
-}
-
-export interface Session {
-  success: boolean;
-  data?: any;
-  error?: ClaudeCodeError;
-  stdout?: string;
-  stderr?: string;
-  exitCode?: number;
 }
