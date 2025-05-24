@@ -36,6 +36,7 @@
   },
   "homepage": "https://github.com/yourusername/claude-code-js#readme",
   "devDependencies": {
+    "@anthropic-ai/claude-code": "^1.0.3",
     "@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
