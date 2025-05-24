@@ -1,5 +1,5 @@
 {
-  "name": "claude-code-sdk",
+  "name": "claude-code-js",
   "version": "0.1.0",
   "description": "A TypeScript SDK wrapper for claude-code CLI",
   "main": "dist/index.js",
