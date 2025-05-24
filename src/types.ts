@@ -26,3 +26,18 @@ export interface CommandOptions {
   timeout?: number;
   shell?: boolean;
 }
+
+export interface Prompt {
+  prompt: string;
+  systemPrompt?: string;
+  appendSystemPrompt?: string;
+}
+
+export interface Session {
+  success: boolean;
+  data?: any;
+  error?: ClaudeCodeError;
+  stdout?: string;
+  stderr?: string;
+  exitCode?: number;
+}
