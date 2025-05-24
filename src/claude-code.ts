@@ -25,18 +25,6 @@ export class ClaudeCode {
         args.push('--model', this.options.model);
       }
 
-      if (this.options.temperature !== undefined) {
-        args.push('--temperature', this.options.temperature.toString());
-      }
-
-      if (this.options.maxTokens !== undefined) {
-        args.push('--max-tokens', this.options.maxTokens.toString());
-      }
-
-      if (this.options.contextWindow !== undefined) {
-        args.push('--context-window', this.options.contextWindow.toString());
-      }
-
       args.push('claude');
       args.push('-p');
       args.push(`${message}`);
@@ -100,7 +88,7 @@ export class ClaudeCode {
   }
 
   async version(): Promise<string> {
-    const result = await executeCommand(['claude-code', '--version']);
+    const result = await executeCommand(['claude', '--version']);
     return result.stdout.trim();
   }
 

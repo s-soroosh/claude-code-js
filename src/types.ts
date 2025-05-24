@@ -1,9 +1,6 @@
 export interface ClaudeCodeOptions {
   apiKey?: string;
   model?: string;
-  temperature?: number;
-  maxTokens?: number;
-  contextWindow?: number;
   workingDirectory?: string;
   verbose?: boolean;
 }
