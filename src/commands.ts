@@ -6,7 +6,7 @@ export async function executeCommand(
   options: CommandOptions = {}
 ): Promise<{ stdout: string; stderr: string; exitCode: number }> {
   const [cmd, ...args] = command;
-  
+
   const result = await execa(cmd, args, {
     cwd: options.cwd,
     env: options.env,
@@ -23,12 +23,9 @@ export async function executeCommand(
   };
 }
 
-export function streamCommand(
-  command: string[],
-  options: CommandOptions = {}
-): ResultPromise {
+export function streamCommand(command: string[], options: CommandOptions = {}): ResultPromise {
   const [cmd, ...args] = command;
-  
+
   return execa(cmd, args, {
     cwd: options.cwd,
     env: options.env,
