@@ -15,7 +15,7 @@ export class ClaudeCode {
 
   async chat(message: string): Promise<ClaudeCodeResponse> {
     try {
-      const args = ['npx'];
+      const args = ['claude'];
 
       if (this.options.apiKey) {
         args.push('--api-key', this.options.apiKey);
@@ -25,7 +25,6 @@ export class ClaudeCode {
         args.push('--model', this.options.model);
       }
 
-      args.push('claude');
       args.push('-p');
       args.push(`${message}`);
 
@@ -58,7 +57,17 @@ export class ClaudeCode {
 
   async runCommand(command: string): Promise<ClaudeCodeResponse> {
     try {
-      const args = ['claude', 'run', command];
+      const args = ['claude'];
+      if (this.options.apiKey) {
+        args.push('--api-key', this.options.apiKey);
+      }
+
+      if (this.options.model) {
+        args.push('--model', this.options.model);
+      }
+
+      args.push('-p');
+      args.push(`${command}`);
 
       const result = await executeCommand(args, {
         cwd: this.options.workingDirectory,
