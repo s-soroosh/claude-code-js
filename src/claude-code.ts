@@ -58,7 +58,7 @@ export class ClaudeCode {
 
   async runCommand(command: string): Promise<ClaudeCodeResponse> {
     try {
-      const args = ['claude-code', 'run', command];
+      const args = ['claude', 'run', command];
 
       const result = await executeCommand(args, {
         cwd: this.options.workingDirectory,
