@@ -1,0 +1,53 @@
+{
+  "name": "claude-code-sdk",
+  "version": "0.1.0",
+  "description": "A TypeScript SDK wrapper for claude-code CLI",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prepublishOnly": "npm run clean && npm run build",
+    "test": "vitest",
+    "lint": "eslint . --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "sdk",
+    "cli",
+    "wrapper",
+    "anthropic"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/claude-code-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/claude-code-js/issues"
+  },
+  "homepage": "https://github.com/yourusername/claude-code-js#readme",
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.0",
+    "@typescript-eslint/parser": "^6.19.0",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.4",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.0"
+  },
+  "dependencies": {
+    "execa": "^9.5.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
