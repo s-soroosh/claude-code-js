@@ -29,12 +29,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yourusername/claude-code-js.git"
+    "url": "git+https://github.com/s-soroosh/claude-code-js.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/claude-code-js/issues"
+    "url": "https://github.com/s-soroosh/claude-code-js/issues"
   },
-  "homepage": "https://github.com/yourusername/claude-code-js#readme",
+  "homepage": "https://github.com/s-soroosh/claude-code-js#readme",
   "devDependencies": {
     "@anthropic-ai/claude-code": "^1.0.3",
     "@types/node": "^20.11.0",
