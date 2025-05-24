@@ -1,6 +1,7 @@
 import { type ExecaError } from 'execa';
-import { ClaudeCodeOptions, ClaudeCodeResponse, Prompt, Session } from './types';
+import { ClaudeCodeMessage, ClaudeCodeOptions, ClaudeCodeResponse, Prompt } from './types';
 import { executeCommand } from './commands';
+import { Session } from './session';
 
 export class ClaudeCode {
   private options: ClaudeCodeOptions;
@@ -15,6 +16,7 @@ export class ClaudeCode {
 
   private defaultArgs(): string[] {
     const args = ['claude'];
+    args.push('--output-format', 'json');
     if (this.options.apiKey) {
       args.push('--api-key', this.options.apiKey);
     }
@@ -25,22 +27,40 @@ export class ClaudeCode {
     return args;
   }
 
-  async chat(message: string): Promise<ClaudeCodeResponse> {
+  async chat(
+    prompt: Prompt,
+    sessionId: string | undefined = undefined
+  ): Promise<ClaudeCodeResponse> {
     try {
       const args = this.defaultArgs();
 
       args.push('-p');
-      args.push(`"${message}"`);
+      args.push(`"${prompt.prompt}"`);
+
+      if (prompt.systemPrompt) {
+        args.push('--system-prompt');
+        args.push(`"${prompt.systemPrompt}"`);
+      }
+
+      if (prompt.appendSystemPrompt) {
+        args.push('--append-system-prompt');
+        args.push(`"${prompt.appendSystemPrompt}"`);
+      }
+
+      if (sessionId) {
+        args.push('--resume', sessionId);
+      }
 
       const result = await executeCommand(args, {
         cwd: this.options.workingDirectory,
       });
+      console.log({ result });
+
+      let message = this.buildMessage(result);
 
       return {
         success: true,
-        data: result.stdout,
-        stdout: result.stdout,
-        stderr: result.stderr,
+        message,
         exitCode: result.exitCode,
       };
     } catch (error) {
@@ -52,11 +72,22 @@ export class ClaudeCode {
           message: execaError.message,
           details: execaError,
         },
-        stdout: String(execaError.stdout ?? ''),
-        stderr: String(execaError.stderr ?? ''),
         exitCode: execaError.exitCode,
       };
     }
+  }
+
+  private buildMessage(result: { stdout: string; stderr: string; exitCode: number }) {
+    let message: ClaudeCodeMessage | undefined = undefined;
+    if (result.stdout) {
+      const stdoutJson = JSON.parse(result.stdout);
+      if (Array.isArray(stdoutJson)) {
+        message = stdoutJson.at(-1) as ClaudeCodeMessage;
+      } else {
+        message = stdoutJson as ClaudeCodeMessage;
+      }
+    }
+    return message;
   }
 
   async runCommand(command: string): Promise<ClaudeCodeResponse> {
@@ -70,11 +101,11 @@ export class ClaudeCode {
         cwd: this.options.workingDirectory,
       });
 
+      const message = this.buildMessage(result);
+
       return {
         success: true,
-        data: result.stdout,
-        stdout: result.stdout,
-        stderr: result.stderr,
+        message,
         exitCode: result.exitCode,
       };
     } catch (error) {
@@ -86,8 +117,6 @@ export class ClaudeCode {
           message: execaError.message,
           details: execaError,
         },
-        stdout: String(execaError.stdout ?? ''),
-        stderr: String(execaError.stderr ?? ''),
         exitCode: execaError.exitCode,
       };
     }
@@ -108,44 +137,17 @@ export class ClaudeCode {
 
   async newSession(prompt: Prompt): Promise<Session> {
     try {
-      const args = this.defaultArgs();
-      args.push('-p');
-      args.push(`"${prompt.prompt}"`);
+      const response = await this.chat(prompt);
+      const message = response.message;
 
-      if (prompt.systemPrompt) {
-        args.push('--system-prompt');
-        args.push(`"${prompt.systemPrompt}"`);
+      if (message) {
+        return new Session(this, message);
       }
 
-      if (prompt.appendSystemPrompt) {
-        args.push('--append-system-prompt');
-        args.push(`"${prompt.appendSystemPrompt}"`);
-      }
-
-      const result = await executeCommand(args, {
-        cwd: this.options.workingDirectory,
-      });
-
-      return {
-        success: true,
-        data: result.stdout,
-        stdout: result.stdout,
-        stderr: result.stderr,
-        exitCode: result.exitCode,
-      };
+      throw new Error('No message returned from Claude');
     } catch (error) {
-      const execaError = error as ExecaError;
-      return {
-        success: false,
-        error: {
-          code: 'COMMAND_FAILED',
-          message: execaError.message,
-          details: execaError,
-        },
-        stdout: String(execaError.stdout ?? ''),
-        stderr: String(execaError.stderr ?? ''),
-        exitCode: execaError.exitCode,
-      };
+      console.error('Error in starting session:', { error });
+      throw error;
     }
   }
 }
