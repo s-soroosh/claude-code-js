@@ -8,6 +8,7 @@ export class ClaudeCode {
 
   constructor(options: ClaudeCodeOptions = {}) {
     this.options = {
+      claudeCodePath: 'claude',
       workingDirectory: process.cwd(),
       verbose: false,
       ...options,
@@ -15,7 +16,7 @@ export class ClaudeCode {
   }
 
   private defaultArgs(): string[] {
-    const args = ['claude'];
+    const args = [this.options.claudeCodePath ?? 'claude'];
     args.push('--output-format', 'json');
     if (this.options.apiKey) {
       args.push('--api-key', this.options.apiKey);

@@ -1,4 +1,5 @@
 export interface ClaudeCodeOptions {
+  claudeCodePath?: string;
   apiKey?: string;
   model?: string;
   workingDirectory?: string;

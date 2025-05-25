@@ -26,6 +26,7 @@ describe('ClaudeCode', () => {
       const claude = new ClaudeCode();
       const options = claude.getOptions();
 
+      expect(options.claudeCodePath).toBe('claude');
       expect(options.workingDirectory).toBe(process.cwd());
       expect(options.verbose).toBe(false);
       expect(options.apiKey).toBeUndefined();
@@ -34,6 +35,7 @@ describe('ClaudeCode', () => {
 
     it('should initialize with custom options', () => {
       const customOptions: ClaudeCodeOptions = {
+        claudeCodePath: '~/local/claude',
         workingDirectory: '/custom/path',
         verbose: true,
         apiKey: 'test-api-key',
