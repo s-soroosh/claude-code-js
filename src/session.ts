@@ -53,4 +53,11 @@ export class Session {
     newSession._sessionIds = this._sessionIds;
     return newSession;
   }
+
+  revert(count: number = 1) {
+    for (let i = 0; i < count; i++) {
+      this._sessionIds.pop();
+      this._messages.pop();
+    }
+  }
 }

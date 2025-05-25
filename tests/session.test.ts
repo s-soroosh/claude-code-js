@@ -309,7 +309,6 @@ describe('Session', () => {
 
   describe('fork', () => {
     it('should not change the current session', async () => {
-
       const mockResponse: ClaudeCodeResponse = {
         success: true,
         message: {
@@ -341,6 +340,36 @@ describe('Session', () => {
 
       expect(forkedSession.messages).toHaveLength(3);
       expect(forkedSession.sessionIds).toHaveLength(3);
+    });
+  });
+
+  describe('revert', () => {
+    it('should revert last session', async () => {
+      const mockResponse: ClaudeCodeResponse = {
+        success: true,
+        message: {
+          type: 'result',
+          subtype: 'success',
+          cost_usd: 0.002,
+          duration_ms: 1500,
+          duration_api_ms: 1200,
+          is_error: false,
+          num_turns: 2,
+          result: 'Second response',
+          session_id: 'session-456',
+        },
+      };
+      (mockClaudeCode.chat as Mock).mockResolvedValue(mockResponse);
+      const session = new Session(mockClaudeCode, mockInitialMessage);
+      await session.prompt('prompt1');
+      await session.prompt('prompt2');
+
+      const sessionSessionIds = session.sessionIds;
+      const sessionMessages = session.messages;
+
+      session.revert();
+      expect(session.sessionIds).toHaveLength(sessionSessionIds.length - 1);
+      expect(session.messages).toHaveLength(sessionMessages.length - 1);
     });
   });
 });
