@@ -1,5 +1,5 @@
 import { type ExecaError } from 'execa';
-import { ClaudeCodeMessage, ClaudeCodeOptions, ClaudeCodeResponse, Prompt } from './types';
+import { ClaudeCodeMessage, ClaudeCodeOptions, ClaudeCodeResponse, PromptInput } from './types';
 import { executeCommand } from './commands';
 import { Session } from './session';
 
@@ -28,23 +28,28 @@ export class ClaudeCode {
   }
 
   async chat(
-    prompt: Prompt,
+    prompt: PromptInput,
     sessionId: string | undefined = undefined
   ): Promise<ClaudeCodeResponse> {
     try {
       const args = this.defaultArgs();
 
       args.push('-p');
-      args.push(`"${prompt.prompt}"`);
 
-      if (prompt.systemPrompt) {
-        args.push('--system-prompt');
-        args.push(`"${prompt.systemPrompt}"`);
-      }
+      if (typeof prompt === 'string') {
+        args.push(prompt);
+      } else {
+        args.push(`"${prompt.prompt}"`);
 
-      if (prompt.appendSystemPrompt) {
-        args.push('--append-system-prompt');
-        args.push(`"${prompt.appendSystemPrompt}"`);
+        if (prompt.systemPrompt) {
+          args.push('--system-prompt');
+          args.push(`"${prompt.systemPrompt}"`);
+        }
+
+        if (prompt.appendSystemPrompt) {
+          args.push('--append-system-prompt');
+          args.push(`"${prompt.appendSystemPrompt}"`);
+        }
       }
 
       if (sessionId) {
@@ -135,7 +140,7 @@ export class ClaudeCode {
     return { ...this.options };
   }
 
-  async newSession(prompt: Prompt): Promise<Session> {
+  async newSession(prompt: PromptInput): Promise<Session> {
     try {
       const response = await this.chat(prompt);
       const message = response.message;

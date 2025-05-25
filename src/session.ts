@@ -1,5 +1,5 @@
 import { ClaudeCode } from './claude-code';
-import { ClaudeCodeMessage, Prompt } from './types';
+import { ClaudeCodeMessage, PromptInput } from './types';
 
 export class Session {
   private claudeCode: ClaudeCode;
@@ -12,7 +12,7 @@ export class Session {
     this.sessionIds.push(initialMessage.session_id);
   }
 
-  async prompt(prompt: Prompt): Promise<ClaudeCodeMessage> {
+  async prompt(prompt: PromptInput): Promise<ClaudeCodeMessage> {
     const response = await this.claudeCode.chat(prompt, this.sessionIds.at(-1));
     if (response.message) {
       this.messages.push(response.message);

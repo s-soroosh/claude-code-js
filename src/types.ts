@@ -42,3 +42,5 @@ export interface Prompt {
   systemPrompt?: string;
   appendSystemPrompt?: string;
 }
+
+export type PromptInput = Prompt | string;
