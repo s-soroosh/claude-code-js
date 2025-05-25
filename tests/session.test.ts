@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, Mock } from 'vitest';
-import { Session } from '../session';
-import { ClaudeCode } from '../claude-code';
-import { ClaudeCodeMessage, ClaudeCodeResponse } from '../types';
+import { Session } from '../src/session';
+import { ClaudeCode, ClaudeCodeResponse } from '../src';
+import { ClaudeCodeMessage } from '../src/types';
 
 describe('Session', () => {
   let mockClaudeCode: ClaudeCode;

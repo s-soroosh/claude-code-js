@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ClaudeCode } from '../claude-code';
+import { ClaudeCode } from '../src';
 
 describe('acceptance', () => {
   it('should create a new session', async () => {

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ClaudeCode } from '../claude-code';
-import { executeCommand } from '../commands';
+import { ClaudeCode, executeCommand } from '../src';
 
 describe('ClaudeCode', () => {
   it('should create an instance', () => {
@@ -16,7 +15,7 @@ describe('ClaudeCode', () => {
     const claudeCode = new ClaudeCode();
     let response = await claudeCode.chat('say hello');
     console.log({ response });
-    expect(response.data).toBeTruthy();
+    expect(response.message).toBeTruthy();
   }, 100_000);
 
   it('streamCommand', async () => {
