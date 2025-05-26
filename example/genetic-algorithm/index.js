@@ -39,8 +39,7 @@ class TravelingSalesmanGA {
     });
     
     const baseSession = await this.claude.newSession();
-    
-    // Explain the problem to Claude
+
     const cityList = this.cities.map(c => c.name).join(', ');
     await baseSession.prompt({
       prompt: `You are solving the Traveling Salesman Problem. 
@@ -115,8 +114,7 @@ class TravelingSalesmanGA {
     
     for (const genome of this.population) {
       const route = this.parseRoute(genome.route);
-      
-      // Check if route is valid (visits all cities once)
+
       const uniqueCities = new Set(route);
       const cityNames = this.cities.map(c => c.name);
       const invalidCities = route.filter(city => !cityNames.includes(city));
@@ -215,14 +213,12 @@ class TravelingSalesmanGA {
         await this.evolve();
       }
     }
-    
-    // Final results
+
     console.log('\n🏆 Final Results:');
     console.log(`Best route: ${this.population[0].route}`);
     console.log(`Total distance: ${this.population[0].distance.toFixed(2)} units`);
     console.log(`Fitness score: ${this.population[0].fitness.toFixed(2)}`);
-    
-    // Visualize the route
+
     console.log('\n🗺️  Route visualization:');
     const bestRoute = this.parseRoute(this.population[0].route);
     for (let i = 0; i < bestRoute.length; i++) {
@@ -234,15 +230,13 @@ class TravelingSalesmanGA {
   }
 }
 
-// Main execution
 async function main() {
   console.log('🧬 Traveling Salesman Problem with Genetic Algorithm\n');
   console.log('This demonstrates a problem where genetic algorithms truly shine:');
   console.log('finding near-optimal routes when exhaustive search is impractical.\n');
   
   const claude = new ClaudeCode();
-  
-  // Define cities with coordinates
+
   const cities = [
     { name: 'New York', x: 0, y: 0 },
     { name: 'Boston', x: 2, y: 3 },
