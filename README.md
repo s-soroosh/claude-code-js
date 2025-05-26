@@ -252,6 +252,115 @@ const validationResult = await validationSession.prompt({
 console.log('Validation result:', validationResult.result);
 ```
 
+### Session Forking and Reverting
+
+#### Fork Sessions for Parallel Explorations
+
+The `fork()` method creates a new session with the same conversation history, allowing you to explore different conversation branches without affecting the original session.
+
+```javascript
+const claude = new ClaudeCode();
+const mainSession = await claude.newSession();
+
+// Start a conversation
+await mainSession.prompt({
+  prompt: 'Write a function to calculate factorial',
+  systemPrompt: 'You are a helpful coding assistant'
+});
+
+await mainSession.prompt({
+  prompt: 'Now make it recursive'
+});
+
+// Fork the session to explore a different approach
+const iterativeSession = mainSession.fork();
+const recursiveSession = mainSession.fork();
+
+// Explore iterative approach in one fork
+await iterativeSession.prompt({
+  prompt: 'Actually, show me an iterative version instead'
+});
+
+// Explore memoized approach in another fork
+await recursiveSession.prompt({
+  prompt: 'Can you add memoization to the recursive version?'
+});
+
+// Original session remains unchanged
+console.log('Main session messages:', mainSession.messages.length); // 2
+console.log('Iterative fork messages:', iterativeSession.messages.length); // 3
+console.log('Recursive fork messages:', recursiveSession.messages.length); // 3
+```
+
+#### Revert Session State
+
+The `revert()` method removes the most recent messages and session IDs, allowing you to "undo" conversation turns.
+
+```javascript
+const session = await claude.newSession();
+
+// Build up a conversation
+await session.prompt({ prompt: 'Write a Python hello world' });
+await session.prompt({ prompt: 'Now add a loop that prints it 5 times' });
+await session.prompt({ prompt: 'Add error handling' });
+
+console.log('Messages before revert:', session.messages.length); // 3
+
+// Revert the last message
+session.revert();
+console.log('Messages after single revert:', session.messages.length); // 2
+
+// Revert multiple messages at once
+session.revert(2);
+console.log('Messages after reverting 2:', session.messages.length); // 0
+
+// Continue from the reverted state
+await session.prompt({ prompt: 'Write a JavaScript hello world instead' });
+```
+
+#### Real-World Use Case: A/B Testing Code Solutions
+
+```javascript
+const claude = new ClaudeCode();
+const session = await claude.newSession();
+
+// Set up the problem
+await session.prompt({
+  prompt: 'I need to process a large CSV file with millions of rows. What approach should I use?',
+  systemPrompt: 'You are an expert in data processing and performance optimization'
+});
+
+// Fork to explore different solutions
+const streamingFork = session.fork();
+const chunkingFork = session.fork();
+const parallelFork = session.fork();
+
+// Explore streaming approach
+const streamingSolution = await streamingFork.prompt({
+  prompt: 'Show me how to implement this using Node.js streams'
+});
+
+// Explore chunking approach
+const chunkingSolution = await chunkingFork.prompt({
+  prompt: 'Show me how to process this in chunks with a batch size'
+});
+
+// Explore parallel processing
+const parallelSolution = await parallelFork.prompt({
+  prompt: 'Show me how to use worker threads for parallel processing'
+});
+
+// Compare solutions
+console.log('Streaming approach:', streamingSolution.result);
+console.log('Chunking approach:', chunkingSolution.result);
+console.log('Parallel approach:', parallelSolution.result);
+
+// Pick the best approach and continue
+await parallelFork.prompt({
+  prompt: 'Add progress tracking to this implementation'
+});
+```
+
 ### Configuration Management
 
 ```javascript
