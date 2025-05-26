@@ -367,74 +367,23 @@ describe('ClaudeCode', () => {
   });
 
   describe('newSession', () => {
-    const mockMessage: ClaudeCodeMessage = {
-      type: 'result',
-      subtype: 'success',
-      cost_usd: 0.01,
-      duration_ms: 1000,
-      duration_api_ms: 800,
-      is_error: false,
-      num_turns: 1,
-      result: 'Session started',
-      session_id: 'new-session-id',
-    };
-
-    it('should create a new session with string prompt', async () => {
-      mockExecuteCommand.mockResolvedValueOnce({
-        stdout: JSON.stringify(mockMessage),
-        stderr: '',
-        exitCode: 0,
-      });
-
+    it('should create a new session', () => {
       const claude = new ClaudeCode();
-      await claude.newSession('Start session');
+      const session = claude.newSession();
 
-      expect(mockSession).toHaveBeenCalledWith(claude, mockMessage);
+      expect(mockSession).toHaveBeenCalledWith(claude);
+      expect(session).toBeDefined();
     });
 
-    it('should create a new session with object prompt', async () => {
-      mockExecuteCommand.mockResolvedValueOnce({
-        stdout: JSON.stringify(mockMessage),
-        stderr: '',
-        exitCode: 0,
+    it('should create a new session with custom options', () => {
+      const claude = new ClaudeCode({
+        apiKey: 'test-key',
+        model: 'sonnet',
       });
+      const session = claude.newSession();
 
-      const prompt: PromptInput = {
-        prompt: 'Start session',
-        systemPrompt: 'Be helpful',
-      };
-
-      const claude = new ClaudeCode();
-      await claude.newSession(prompt);
-
-      expect(mockSession).toHaveBeenCalledWith(claude, mockMessage);
-    });
-
-    it('should throw error when no message is returned', async () => {
-      mockExecuteCommand.mockResolvedValueOnce({
-        stdout: '',
-        stderr: '',
-        exitCode: 0,
-      });
-
-      const claude = new ClaudeCode();
-
-      await expect(claude.newSession('Start session')).rejects.toThrow(
-        'No message returned from Claude'
-      );
-    });
-
-    it('should throw error when chat returns failure', async () => {
-      const mockError = new Error('Chat failed') as any;
-      mockError.message = 'Chat failed';
-      mockError.exitCode = 1;
-      mockExecuteCommand.mockRejectedValueOnce(mockError);
-
-      const claude = new ClaudeCode();
-
-      await expect(claude.newSession('Start session')).rejects.toThrow(
-        'No message returned from Claude'
-      );
+      expect(mockSession).toHaveBeenCalledWith(claude);
+      expect(session).toBeDefined();
     });
   });
 

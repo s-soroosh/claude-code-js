@@ -72,7 +72,7 @@ if (result.success) {
 
 ```javascript
 // Create a new session for ongoing conversations
-const session = await claude.newSession();
+const session = claude.newSession();
 
 // Start the conversation
 const firstMessage = await session.prompt({
@@ -127,7 +127,7 @@ await stream;
 const claude = new ClaudeCode();
 
 // Create a code review session
-const reviewer = await claude.newSession();
+const reviewer = claude.newSession();
 
 // Start the review
 const initialReview = await reviewer.prompt({
@@ -177,7 +177,7 @@ if (response.success) {
 #### Interactive Debugging Helper
 
 ```javascript
-const debugSession = await claude.newSession();
+const debugSession = claude.newSession();
 
 // Start the debugging session
 await debugSession.prompt({
@@ -213,8 +213,8 @@ const solution = await debugSession.prompt({
 const claude = new ClaudeCode();
 
 // Create independent sessions for different tasks
-const codeReviewSession = await claude.newSession();
-const debugSession = await claude.newSession();
+const codeReviewSession = claude.newSession();
+const debugSession = claude.newSession();
 
 // Start the code review session
 await codeReviewSession.prompt({
@@ -237,13 +237,13 @@ await debugSession.prompt({ prompt: 'The error occurs in line 45 of auth.js' });
 
 ```javascript
 // Use output from one session as input to another
-const mathSession = await claude.newSession();
+const mathSession = claude.newSession();
 const mathResult = await mathSession.prompt({
   prompt: 'Calculate 15 * 23',
   systemPrompt: 'You are a math expert. Return only the numeric result.'
 });
 
-const validationSession = await claude.newSession();
+const validationSession = claude.newSession();
 const validationResult = await validationSession.prompt({
   prompt: mathResult.result,
   systemPrompt: 'You are expert at validating math calculations.'
@@ -260,7 +260,7 @@ The `fork()` method creates a new session with the same conversation history, al
 
 ```javascript
 const claude = new ClaudeCode();
-const mainSession = await claude.newSession();
+const mainSession = claude.newSession();
 
 // Start a conversation
 await mainSession.prompt({
@@ -297,7 +297,7 @@ console.log('Recursive fork messages:', recursiveSession.messages.length); // 3
 The `revert()` method removes the most recent messages and session IDs, allowing you to "undo" conversation turns.
 
 ```javascript
-const session = await claude.newSession();
+const session = claude.newSession();
 
 // Build up a conversation
 await session.prompt({ prompt: 'Write a Python hello world' });
@@ -322,7 +322,7 @@ await session.prompt({ prompt: 'Write a JavaScript hello world instead' });
 
 ```javascript
 const claude = new ClaudeCode();
-const session = await claude.newSession();
+const session = claude.newSession();
 
 // Set up the problem
 await session.prompt({

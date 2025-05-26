@@ -4,7 +4,7 @@ import { ClaudeCode } from '../src';
 describe('acceptance', () => {
   it('should create a new session', async () => {
     const claude = new ClaudeCode();
-    const session1 = await claude.newSession();
+    const session1 = claude.newSession();
 
     const session1Message = await session1.prompt({
       prompt: 'What is 2 + 2?',
@@ -13,7 +13,7 @@ describe('acceptance', () => {
     });
     console.log(session1Message);
     expect(session1Message).toBeTruthy();
-    const session2 = await claude.newSession();
+    const session2 = claude.newSession();
     const session2Message = await session2.prompt({
       prompt: session1Message.result,
       systemPrompt: 'You are expert at validating math calculations .',

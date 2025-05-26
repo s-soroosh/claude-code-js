@@ -61,7 +61,7 @@ export class ClaudeCode {
         cwd: this.options.workingDirectory,
       });
 
-      let message = this.buildMessage(result);
+      const message = this.buildMessage(result);
 
       return {
         success: true,
@@ -140,7 +140,7 @@ export class ClaudeCode {
     return { ...this.options };
   }
 
-  async newSession(): Promise<Session> {
+  newSession(): Session {
     return new Session(this);
   }
 }

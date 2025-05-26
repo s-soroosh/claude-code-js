@@ -38,7 +38,7 @@ class TravelingSalesmanGA {
       console.log(`  ${city.name} at (${city.x}, ${city.y})`);
     });
     
-    const baseSession = await this.claude.newSession();
+    const baseSession = this.claude.newSession();
 
     const cityList = this.cities.map(c => c.name).join(', ');
     await baseSession.prompt({

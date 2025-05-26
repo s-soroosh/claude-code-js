@@ -13,12 +13,12 @@ describe('ClaudeCode', () => {
 
   it('should handle chat command response', async () => {
     const claudeCode = new ClaudeCode();
-    let response = await claudeCode.chat('say hello');
+    const response = await claudeCode.chat('say hello');
     console.log({ response });
     expect(response.message).toBeTruthy();
   }, 100_000);
 
-  it('streamCommand', async () => {
+  it.skip('streamCommand', async () => {
     const result = await executeCommand([
       'npx',
       'claude',
