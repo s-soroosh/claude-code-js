@@ -1,0 +1,13 @@
+{
+  "name": "genetic-algorithm-example",
+  "version": "1.0.0",
+  "description": "Genetic algorithm example using claude-code-js with session forking",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "claude-code-js": "file:../.."
+  }
+}
