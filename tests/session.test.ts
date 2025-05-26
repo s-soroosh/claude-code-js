@@ -5,54 +5,25 @@ import { ClaudeCodeMessage } from '../src/types';
 
 describe('Session', () => {
   let mockClaudeCode: ClaudeCode;
-  let mockInitialMessage: ClaudeCodeMessage;
 
   beforeEach(() => {
     mockClaudeCode = {
       chat: vi.fn(),
     } as unknown as ClaudeCode;
-
-    mockInitialMessage = {
-      type: 'result',
-      subtype: 'success',
-      cost_usd: 0.001,
-      duration_ms: 1000,
-      duration_api_ms: 800,
-      is_error: false,
-      num_turns: 1,
-      result: 'Initial response',
-      session_id: 'session-123',
-    };
   });
 
   describe('constructor', () => {
     it('should initialize with ClaudeCode instance and initial message', () => {
-      const session = new Session(mockClaudeCode, mockInitialMessage);
+      const session = new Session(mockClaudeCode);
 
-      expect(session.messages).toHaveLength(1);
-      expect(session.messages[0]).toEqual(mockInitialMessage);
-      expect(session.sessionIds).toHaveLength(1);
-      expect(session.sessionIds[0]).toBe('session-123');
-    });
-
-    it('should store the initial message in messages array', () => {
-      const session = new Session(mockClaudeCode, mockInitialMessage);
-
-      expect(session.messages[0]).toBe(mockInitialMessage);
-      expect(session.messages[0].result).toBe('Initial response');
-      expect(session.messages[0].session_id).toBe('session-123');
-    });
-
-    it('should store the initial session ID in sessionIds array', () => {
-      const session = new Session(mockClaudeCode, mockInitialMessage);
-
-      expect(session.sessionIds[0]).toBe('session-123');
+      expect(session.messages).toHaveLength(0);
+      expect(session.sessionIds).toHaveLength(0);
     });
   });
 
   describe('prompt', () => {
     it('should send prompt with the latest session ID', async () => {
-      const session = new Session(mockClaudeCode, mockInitialMessage);
+      const session = new Session(mockClaudeCode);
       const mockResponse: ClaudeCodeResponse = {
         success: true,
         message: {
@@ -72,16 +43,13 @@ describe('Session', () => {
 
       const result = await session.prompt({ prompt: 'Follow up question' });
 
-      expect(mockClaudeCode.chat).toHaveBeenCalledWith(
-        { prompt: 'Follow up question' },
-        'session-123'
-      );
+      expect(mockClaudeCode.chat).toHaveBeenCalledWith({ prompt: 'Follow up question' }, undefined);
       expect(result).toEqual(mockResponse.message);
     });
 
     it('should append new message to messages array', async () => {
-      const session = new Session(mockClaudeCode, mockInitialMessage);
-      const secondMessage: ClaudeCodeMessage = {
+      const session = new Session(mockClaudeCode);
+      const message: ClaudeCodeMessage = {
         type: 'result',
         subtype: 'success',
         cost_usd: 0.002,
@@ -95,17 +63,17 @@ describe('Session', () => {
 
       (mockClaudeCode.chat as Mock).mockResolvedValueOnce({
         success: true,
-        message: secondMessage,
+        message: message,
       });
 
       await session.prompt({ prompt: 'Follow up question' });
 
-      expect(session.messages).toHaveLength(2);
-      expect(session.messages[1]).toEqual(secondMessage);
+      expect(session.messages).toHaveLength(1);
+      expect(session.messages[0]).toEqual(message);
     });
 
     it('should append new session ID to sessionIds array', async () => {
-      const session = new Session(mockClaudeCode, mockInitialMessage);
+      const session = new Session(mockClaudeCode);
       const secondMessage: ClaudeCodeMessage = {
         type: 'result',
         subtype: 'success',
@@ -125,12 +93,12 @@ describe('Session', () => {
 
       await session.prompt({ prompt: 'Follow up question' });
 
-      expect(session.sessionIds).toHaveLength(2);
-      expect(session.sessionIds[1]).toBe('session-456');
+      expect(session.sessionIds).toHaveLength(1);
+      expect(session.sessionIds[0]).toBe('session-456');
     });
 
     it('should handle multiple prompts and maintain conversation history', async () => {
-      const session = new Session(mockClaudeCode, mockInitialMessage);
+      const session = new Session(mockClaudeCode);
 
       const messages = [
         {
@@ -164,9 +132,9 @@ describe('Session', () => {
       await session.prompt({ prompt: 'Second question' });
       await session.prompt({ prompt: 'Third question' });
 
-      expect(session.messages).toHaveLength(3);
-      expect(session.sessionIds).toHaveLength(3);
-      expect(session.sessionIds).toEqual(['session-123', 'session-456', 'session-789']);
+      expect(session.messages).toHaveLength(2);
+      expect(session.sessionIds).toHaveLength(2);
+      expect(session.sessionIds).toEqual(['session-456', 'session-789']);
 
       // Verify the second prompt used the session ID from the first response
       expect(mockClaudeCode.chat).toHaveBeenNthCalledWith(
@@ -177,7 +145,7 @@ describe('Session', () => {
     });
 
     it('should throw error when no message is returned', async () => {
-      const session = new Session(mockClaudeCode, mockInitialMessage);
+      const session = new Session(mockClaudeCode);
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       (mockClaudeCode.chat as Mock).mockResolvedValueOnce({
@@ -197,7 +165,7 @@ describe('Session', () => {
     });
 
     it('should handle prompt with system prompt', async () => {
-      const session = new Session(mockClaudeCode, mockInitialMessage);
+      const session = new Session(mockClaudeCode);
       const mockResponse: ClaudeCodeResponse = {
         success: true,
         message: {
@@ -227,12 +195,12 @@ describe('Session', () => {
           systemPrompt: 'You are a helpful assistant',
           appendSystemPrompt: 'Be concise',
         },
-        'session-123'
+        undefined
       );
     });
 
     it('should use the latest session ID from multiple sessions', async () => {
-      const session = new Session(mockClaudeCode, mockInitialMessage);
+      const session = new Session(mockClaudeCode);
 
       // Add multiple session IDs by simulating multiple prompts
       const responses = ['session-456', 'session-789', 'session-abc'].map((id, index) => ({
@@ -281,7 +249,7 @@ describe('Session', () => {
     });
 
     it('should return the message from successful response', async () => {
-      const session = new Session(mockClaudeCode, mockInitialMessage);
+      const session = new Session(mockClaudeCode);
       const expectedMessage: ClaudeCodeMessage = {
         type: 'result',
         subtype: 'success',
@@ -325,21 +293,21 @@ describe('Session', () => {
       };
 
       (mockClaudeCode.chat as Mock).mockResolvedValue(mockResponse);
-      const session = new Session(mockClaudeCode, mockInitialMessage);
+      const session = new Session(mockClaudeCode);
       await session.prompt('prompt1');
       await session.prompt('prompt2');
 
       const sessionMessages = session.messages;
       const sessionSessionIds = session.sessionIds;
-      expect(sessionMessages).toHaveLength(3);
-      expect(sessionSessionIds).toHaveLength(3);
+      expect(sessionMessages).toHaveLength(2);
+      expect(sessionSessionIds).toHaveLength(2);
 
       const forkedSession = session.fork();
-      expect(session.messages).toHaveLength(3);
-      expect(session.sessionIds).toHaveLength(3);
+      expect(session.messages).toHaveLength(2);
+      expect(session.sessionIds).toHaveLength(2);
 
-      expect(forkedSession.messages).toHaveLength(3);
-      expect(forkedSession.sessionIds).toHaveLength(3);
+      expect(forkedSession.messages).toHaveLength(2);
+      expect(forkedSession.sessionIds).toHaveLength(2);
     });
   });
 
@@ -360,7 +328,7 @@ describe('Session', () => {
         },
       };
       (mockClaudeCode.chat as Mock).mockResolvedValue(mockResponse);
-      const session = new Session(mockClaudeCode, mockInitialMessage);
+      const session = new Session(mockClaudeCode);
       await session.prompt('prompt1');
       await session.prompt('prompt2');
 

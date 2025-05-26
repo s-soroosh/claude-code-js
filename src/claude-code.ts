@@ -141,19 +141,7 @@ export class ClaudeCode {
     return { ...this.options };
   }
 
-  async newSession(prompt: PromptInput): Promise<Session> {
-    try {
-      const response = await this.chat(prompt);
-      const message = response.message;
-
-      if (message) {
-        return new Session(this, message);
-      }
-
-      throw new Error('No message returned from Claude');
-    } catch (error) {
-      console.error('Error in starting session:', { error });
-      throw error;
-    }
+  async newSession(): Promise<Session> {
+    return new Session(this);
   }
 }

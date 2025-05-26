@@ -72,13 +72,13 @@ if (result.success) {
 
 ```javascript
 // Create a new session for ongoing conversations
-const session = await claude.newSession({
+const session = await claude.newSession();
+
+// Start the conversation
+const firstMessage = await session.prompt({
   prompt: 'What is 2 + 2?',
   systemPrompt: 'You are expert at math. Always return a single line of text in format: equation = result'
 });
-
-// Access the initial response
-const firstMessage = session.messages[0];
 console.log('First response:', firstMessage.result);
 
 // Continue the conversation
@@ -127,7 +127,10 @@ await stream;
 const claude = new ClaudeCode();
 
 // Create a code review session
-const reviewer = await claude.newSession({
+const reviewer = await claude.newSession();
+
+// Start the review
+const initialReview = await reviewer.prompt({
   prompt: `Review this Express route for security issues:
     app.post('/login', (req, res) => {
       const { username, password } = req.body;
@@ -139,7 +142,7 @@ const reviewer = await claude.newSession({
   systemPrompt: 'You are a security-focused code reviewer. Identify vulnerabilities and suggest fixes.'
 });
 
-console.log('Initial review:', reviewer.messages[0].result);
+console.log('Initial review:', initialReview.result);
 
 // Ask for specific improvements
 const improvements = await reviewer.prompt({
@@ -174,7 +177,10 @@ if (response.success) {
 #### Interactive Debugging Helper
 
 ```javascript
-const debugSession = await claude.newSession({
+const debugSession = await claude.newSession();
+
+// Start the debugging session
+await debugSession.prompt({
   prompt: 'I have a React component that re-renders infinitely. Help me debug it.',
   systemPrompt: 'You are a React debugging expert. Ask clarifying questions and provide solutions.'
 });
@@ -207,12 +213,17 @@ const solution = await debugSession.prompt({
 const claude = new ClaudeCode();
 
 // Create independent sessions for different tasks
-const codeReviewSession = await claude.newSession({
+const codeReviewSession = await claude.newSession();
+const debugSession = await claude.newSession();
+
+// Start the code review session
+await codeReviewSession.prompt({
   prompt: 'Review this code for best practices: function getData() { return fetch("/api").then(r => r.json()) }',
   systemPrompt: 'You are a code reviewer focused on best practices and performance'
 });
 
-const debugSession = await claude.newSession({
+// Start the debugging session
+await debugSession.prompt({
   prompt: 'Help me debug this error: ReferenceError: user is not defined',
   systemPrompt: 'You are a debugging expert'
 });
@@ -226,17 +237,19 @@ await debugSession.prompt({ prompt: 'The error occurs in line 45 of auth.js' });
 
 ```javascript
 // Use output from one session as input to another
-const mathSession = await claude.newSession({
+const mathSession = await claude.newSession();
+const mathResult = await mathSession.prompt({
   prompt: 'Calculate 15 * 23',
   systemPrompt: 'You are a math expert. Return only the numeric result.'
 });
 
-const validationSession = await claude.newSession({
-  prompt: mathSession.messages[0].result,
+const validationSession = await claude.newSession();
+const validationResult = await validationSession.prompt({
+  prompt: mathResult.result,
   systemPrompt: 'You are expert at validating math calculations.'
 });
 
-console.log('Validation result:', validationSession.messages[0].result);
+console.log('Validation result:', validationResult.result);
 ```
 
 ### Configuration Management

@@ -1,20 +1,7 @@
 import { ClaudeCode } from './claude-code';
 import { ClaudeCodeMessage, PromptInput } from './types';
 
-class NullCloudCodeMessage implements ClaudeCodeMessage {
-  type!: 'result';
-  subtype!: 'success';
-  cost_usd!: number;
-  duration_ms!: number;
-  duration_api_ms!: number;
-  is_error!: boolean;
-  num_turns!: number;
-  result!: string;
-  session_id!: string;
-}
-
 export class Session {
-  private static nullCloudCodeMessage: NullCloudCodeMessage = new NullCloudCodeMessage();
   private claudeCode: ClaudeCode;
   private _sessionIds: string[] = [];
   private _messages: ClaudeCodeMessage[] = [];
@@ -27,12 +14,8 @@ export class Session {
     return [...this._messages];
   }
 
-  public constructor(cloudCode: ClaudeCode, initialMessage: ClaudeCodeMessage) {
+  public constructor(cloudCode: ClaudeCode) {
     this.claudeCode = cloudCode;
-    if (initialMessage !== Session.nullCloudCodeMessage) {
-      this._messages.push(initialMessage);
-      this._sessionIds.push(initialMessage.session_id);
-    }
   }
 
   async prompt(prompt: PromptInput): Promise<ClaudeCodeMessage> {
@@ -48,7 +31,7 @@ export class Session {
   }
 
   fork(): Session {
-    const newSession = new Session(this.claudeCode, Session.nullCloudCodeMessage);
+    const newSession = new Session(this.claudeCode);
     newSession._messages = this._messages;
     newSession._sessionIds = this._sessionIds;
     return newSession;
