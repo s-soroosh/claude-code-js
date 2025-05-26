@@ -60,7 +60,6 @@ export class ClaudeCode {
       const result = await executeCommand(args, {
         cwd: this.options.workingDirectory,
       });
-      console.log({ result });
 
       let message = this.buildMessage(result);
 
