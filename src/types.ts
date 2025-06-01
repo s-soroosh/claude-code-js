@@ -49,5 +49,5 @@ export type PromptInput = Prompt | string;
 export interface OAuthCredentials {
   accessToken: string;
   refreshToken: string;
-  expiresAt: number;
+  expiresAt: string;
 }
