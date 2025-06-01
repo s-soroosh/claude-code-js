@@ -31,7 +31,7 @@ This is a TypeScript SDK wrapper for the claude-code CLI. The architecture follo
 1. **ClaudeCode Class** (`src/claude-code.ts`): Main entry point that wraps the claude CLI
    - Handles command construction with proper JSON output format
    - Manages API key, model, and working directory options
-   - Provides methods: `chat()`, `runCommand()`, `newSession()`, `version()`
+   - Provides methods: `chat()`, `newSession()`, `version()`
    - Uses execa for process execution
 
 2. **Session Class** (`src/session.ts`): Manages multi-turn conversations

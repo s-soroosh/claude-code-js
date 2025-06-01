@@ -82,7 +82,25 @@ export class ClaudeCode {
     return message;
   }
 
-  async runCommand(command: string): Promise<ClaudeCodeResponse> {
+  async version(): Promise<string> {
+    const result = await executeCommand(['claude', '--version']);
+    return result.stdout.trim();
+  }
+
+  setOptions(options: Partial<ClaudeCodeOptions>): void {
+    this.options = { ...this.options, ...options };
+  }
+
+  getOptions(): ClaudeCodeOptions {
+    return { ...this.options };
+  }
+
+  newSession(): Session {
+    return new Session(this);
+  }
+
+
+  private async runCommand(command: string): Promise<ClaudeCodeResponse> {
     const args = this.defaultArgs();
 
     args.push('-p');
@@ -99,22 +117,5 @@ export class ClaudeCode {
       message,
       exitCode: result.exitCode,
     };
-  }
-
-  async version(): Promise<string> {
-    const result = await executeCommand(['claude', '--version']);
-    return result.stdout.trim();
-  }
-
-  setOptions(options: Partial<ClaudeCodeOptions>): void {
-    this.options = { ...this.options, ...options };
-  }
-
-  getOptions(): ClaudeCodeOptions {
-    return { ...this.options };
-  }
-
-  newSession(): Session {
-    return new Session(this);
   }
 }

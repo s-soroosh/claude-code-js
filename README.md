@@ -55,19 +55,6 @@ if (response.success) {
 }
 ```
 
-#### Run Commands Through Claude
-
-```javascript
-// Have Claude execute a task
-const result = await claude.runCommand('Fix the failing tests in src/utils.test.js');
-
-if (result.success) {
-  console.log('Claude completed the task');
-  console.log('Result:', result.message.result);
-  console.log('Duration:', result.message.duration_ms, 'ms');
-}
-```
-
 #### Sessions for Multi-turn Conversations
 
 ```javascript
