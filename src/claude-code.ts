@@ -7,6 +7,7 @@ import {
 } from './types';
 import { executeCommand } from './commands';
 import { Session } from './session';
+import { attemptRefreshToken } from './token';
 
 export class ClaudeCode {
   private options: ClaudeCodeOptions;
@@ -96,11 +97,20 @@ export class ClaudeCode {
 
   private async runCommand(
     command: string[],
-    options: CommandOptions
+    options: CommandOptions,
+    refreshToken: boolean = true
   ): Promise<ClaudeCodeResponse> {
     const result = await executeCommand(command, options);
 
     const message = this.buildMessage(result);
+
+    if (refreshToken && message?.is_error && message?.result?.includes('Invalid bearer token')) {
+      console.log('Invalid bearer token, refreshing...');
+      const refreshSuccessful = await attemptRefreshToken();
+      if (refreshSuccessful) {
+        return this.runCommand(command, options, false);
+      }
+    }
 
     return {
       success: result.exitCode === 0,
