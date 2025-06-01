@@ -4,6 +4,11 @@ export interface ClaudeCodeOptions {
   model?: string;
   workingDirectory?: string;
   verbose?: boolean;
+  oauth?: {
+    accessToken: string;
+    refreshToken: string;
+    expiresAt: number;
+  }
 }
 
 export interface ClaudeCodeMessage {
@@ -21,7 +26,7 @@ export interface ClaudeCodeMessage {
 export interface ClaudeCodeResponse {
   success: boolean;
   message?: ClaudeCodeMessage;
-  error?: ClaudeCodeError;
+  error?: ClaudeCodeMessage;
   exitCode?: number;
 }
 
@@ -49,5 +54,5 @@ export type PromptInput = Prompt | string;
 export interface OAuthCredentials {
   accessToken: string;
   refreshToken: string;
-  expiresAt: string;
+  expiresAt: number;
 }
