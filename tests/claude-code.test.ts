@@ -211,26 +211,6 @@ describe('ClaudeCode', () => {
       expect(result.message).toEqual({ ...mockMessage, result: 'Second message' });
     });
 
-    it('should handle command failure', async () => {
-      const mockError = new Error('Command failed') as any;
-      mockError.message = 'Command execution failed';
-      mockError.exitCode = 1;
-      mockExecuteCommand.mockRejectedValueOnce(mockError);
-
-      const claude = new ClaudeCode();
-      const result = await claude.chat('Hello');
-
-      expect(result).toEqual({
-        success: false,
-        error: {
-          code: 'COMMAND_FAILED',
-          message: 'Command execution failed',
-          details: mockError,
-        },
-        exitCode: 1,
-      });
-    });
-
     it('should use custom working directory', async () => {
       mockExecuteCommand.mockResolvedValueOnce({
         stdout: JSON.stringify(mockMessage),

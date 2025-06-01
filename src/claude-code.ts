@@ -1,4 +1,10 @@
-import { ClaudeCodeMessage, ClaudeCodeOptions, ClaudeCodeResponse, PromptInput } from './types';
+import {
+  ClaudeCodeMessage,
+  ClaudeCodeOptions,
+  ClaudeCodeResponse,
+  CommandOptions,
+  PromptInput,
+} from './types';
 import { executeCommand } from './commands';
 import { Session } from './session';
 
@@ -55,18 +61,7 @@ export class ClaudeCode {
       args.push('--resume', sessionId);
     }
 
-    const result = await executeCommand(args, {
-      cwd: this.options.workingDirectory,
-    });
-
-    const message = this.buildMessage(result);
-
-    return {
-      success: result.exitCode === 0,
-      message: result.exitCode === 0 ? message : undefined,
-      error: result.exitCode !== 0 ? message : undefined,
-      exitCode: result.exitCode,
-    };
+    return this.runCommand(args, { cwd: this.options.workingDirectory });
   }
 
   private buildMessage(result: { stdout: string; stderr: string; exitCode: number }) {
@@ -99,22 +94,18 @@ export class ClaudeCode {
     return new Session(this);
   }
 
-
-  private async runCommand(command: string): Promise<ClaudeCodeResponse> {
-    const args = this.defaultArgs();
-
-    args.push('-p');
-    args.push(`"${command}"`);
-
-    const result = await executeCommand(args, {
-      cwd: this.options.workingDirectory,
-    });
+  private async runCommand(
+    command: string[],
+    options: CommandOptions
+  ): Promise<ClaudeCodeResponse> {
+    const result = await executeCommand(command, options);
 
     const message = this.buildMessage(result);
 
     return {
-      success: true,
-      message,
+      success: result.exitCode === 0,
+      message: result.exitCode === 0 ? message : undefined,
+      error: result.exitCode !== 0 ? message : undefined,
       exitCode: result.exitCode,
     };
   }
