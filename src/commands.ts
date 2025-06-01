@@ -14,6 +14,7 @@ export async function executeCommand(
     shell: options.shell,
     stdin: 'ignore',
     stdout: 'pipe',
+    reject: false
   });
 
   return {
