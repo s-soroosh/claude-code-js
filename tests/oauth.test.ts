@@ -12,7 +12,7 @@ describe('setupOAuthCredentials', () => {
   const mockCredentials = {
     accessToken: 'test-access-token',
     refreshToken: 'test-refresh-token',
-    expiresAt: "1234567890",
+    expiresAt: 1234567890,
   };
 
   beforeEach(() => {
@@ -49,7 +49,7 @@ describe('setupOAuthCredentials', () => {
       claudeAiOauth: {
         accessToken: 'test-access-token',
         refreshToken: 'test-refresh-token',
-        expiresAt: '1234567890',
+        expiresAt: 1234567890,
         scopes: ['user:inference', 'user:profile'],
       },
     };

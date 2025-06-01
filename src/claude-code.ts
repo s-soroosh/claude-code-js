@@ -1,4 +1,3 @@
-import { type ExecaError } from 'execa';
 import { ClaudeCodeMessage, ClaudeCodeOptions, ClaudeCodeResponse, PromptInput } from './types';
 import { executeCommand } from './commands';
 import { Session } from './session';
@@ -32,54 +31,42 @@ export class ClaudeCode {
     prompt: PromptInput,
     sessionId: string | undefined = undefined
   ): Promise<ClaudeCodeResponse> {
-    try {
-      const args = this.defaultArgs();
+    const args = this.defaultArgs();
 
-      args.push('-p');
+    args.push('-p');
 
-      if (typeof prompt === 'string') {
-        args.push(prompt);
-      } else {
-        args.push(`"${prompt.prompt}"`);
+    if (typeof prompt === 'string') {
+      args.push(prompt);
+    } else {
+      args.push(`"${prompt.prompt}"`);
 
-        if (prompt.systemPrompt) {
-          args.push('--system-prompt');
-          args.push(`"${prompt.systemPrompt}"`);
-        }
-
-        if (prompt.appendSystemPrompt) {
-          args.push('--append-system-prompt');
-          args.push(`"${prompt.appendSystemPrompt}"`);
-        }
+      if (prompt.systemPrompt) {
+        args.push('--system-prompt');
+        args.push(`"${prompt.systemPrompt}"`);
       }
 
-      if (sessionId) {
-        args.push('--resume', sessionId);
+      if (prompt.appendSystemPrompt) {
+        args.push('--append-system-prompt');
+        args.push(`"${prompt.appendSystemPrompt}"`);
       }
-
-      const result = await executeCommand(args, {
-        cwd: this.options.workingDirectory,
-      });
-
-      const message = this.buildMessage(result);
-
-      return {
-        success: true,
-        message,
-        exitCode: result.exitCode,
-      };
-    } catch (error) {
-      const execaError = error as ExecaError;
-      return {
-        success: false,
-        error: {
-          code: 'COMMAND_FAILED',
-          message: execaError.message,
-          details: execaError,
-        },
-        exitCode: execaError.exitCode,
-      };
     }
+
+    if (sessionId) {
+      args.push('--resume', sessionId);
+    }
+
+    const result = await executeCommand(args, {
+      cwd: this.options.workingDirectory,
+    });
+
+    const message = this.buildMessage(result);
+
+    return {
+      success: result.exitCode === 0,
+      message: result.exitCode === 0 ? message : undefined,
+      error: result.exitCode !== 0 ? message : undefined,
+      exitCode: result.exitCode,
+    };
   }
 
   private buildMessage(result: { stdout: string; stderr: string; exitCode: number }) {
@@ -96,35 +83,22 @@ export class ClaudeCode {
   }
 
   async runCommand(command: string): Promise<ClaudeCodeResponse> {
-    try {
-      const args = this.defaultArgs();
+    const args = this.defaultArgs();
 
-      args.push('-p');
-      args.push(`"${command}"`);
+    args.push('-p');
+    args.push(`"${command}"`);
 
-      const result = await executeCommand(args, {
-        cwd: this.options.workingDirectory,
-      });
+    const result = await executeCommand(args, {
+      cwd: this.options.workingDirectory,
+    });
 
-      const message = this.buildMessage(result);
+    const message = this.buildMessage(result);
 
-      return {
-        success: true,
-        message,
-        exitCode: result.exitCode,
-      };
-    } catch (error) {
-      const execaError = error as ExecaError;
-      return {
-        success: false,
-        error: {
-          code: 'COMMAND_FAILED',
-          message: execaError.message,
-          details: execaError,
-        },
-        exitCode: execaError.exitCode,
-      };
-    }
+    return {
+      success: true,
+      message,
+      exitCode: result.exitCode,
+    };
   }
 
   async version(): Promise<string> {
