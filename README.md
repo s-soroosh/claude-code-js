@@ -405,8 +405,9 @@ The SDK supports automatic OAuth token refresh when working with Claude Code CLI
 // Initialize with OAuth credentials for automatic token refresh
 const claude = new ClaudeCode({
   oauth: {
-    clientId: process.env.CLAUDE_CLIENT_ID,
-    clientSecret: process.env.CLAUDE_CLIENT_SECRET
+    accessToken: "ACCESS_TOKENID",
+    refreshToken: "REFRESH_TOKEN",
+    expiresAt: EXPIRES_AT_VALUE
   }
 });
 
@@ -422,6 +423,20 @@ const response = await claude.chat({
   prompt: 'Help me debug this error'
 });
 ```
+
+**Note:** OAuth credentials can be retrieved from your system's secure storage:
+
+- **Linux:** Stored in `~/.claude/.credentials.json`
+  ```bash
+  cat ~/.claude/.credentials.json
+  ```
+
+- **macOS:** Stored in Keychain
+  ```bash
+  security find-generic-password -l "Claude Code-credentials" -w
+  ```
+
+**Important:** Each server requires its own OAuth token pair. Refresh tokens are single-use, so using the same token on multiple servers will cause authentication failures when one server refreshes the token. 
 
 ## TypeScript Support
 
