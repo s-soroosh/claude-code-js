@@ -45,7 +45,7 @@ export async function refreshToken(refreshToken: string): Promise<OAuthCredentia
       accessToken: payload.access_token,
       refreshToken: payload.refresh_token,
       expiresAt: payload.expires_in,
-    }
+    };
   }
   console.error(response.statusText);
   throw new Error('Failed to refresh token');

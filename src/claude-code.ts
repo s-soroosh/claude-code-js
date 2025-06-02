@@ -110,7 +110,7 @@ export class ClaudeCode {
       (message?.result?.includes('Invalid bearer token') || message?.result?.includes('OAuth'))
     ) {
       console.log('Invalid bearer token, refreshing...');
-      const refreshSuccessful = await attemptRefreshToken();
+      const refreshSuccessful = await attemptRefreshToken(this.options.oauth);
       if (refreshSuccessful) {
         return this.runCommand(command, options, false);
       }
