@@ -4,8 +4,9 @@ import { join } from 'path';
 import { homedir } from 'os';
 import { refreshToken, setupOAuthCredentials } from './oauth';
 import { constants } from 'fs';
+import { ClaudeCodeOptions } from './types';
 
-export async function attemptRefreshToken(): Promise<boolean> {
+export async function attemptRefreshToken(oauthOptions: ClaudeCodeOptions['oauth']): Promise<boolean> {
   if(isMac()) {
     console.log('Mac detected, skipping refresh token');
     return false;
@@ -17,7 +18,12 @@ export async function attemptRefreshToken(): Promise<boolean> {
     await access(credentialsPath, constants.F_OK);
   } catch {
     console.log('Credentials file does not exist');
-    return false;
+
+    if(oauthOptions === undefined) {
+      return false;
+    }
+    console.log('Attempting to setup credentials from oauth options');
+    await setupOAuthCredentials(oauthOptions);
   }
 
   try {
