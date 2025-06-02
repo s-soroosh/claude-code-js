@@ -30,7 +30,11 @@ const claude = new ClaudeCode({
   apiKey: process.env.CLAUDE_API_KEY, // Optional: if already logged in
   model: 'claude-3-sonnet', // Optional: specify model
   workingDirectory: './my-project', // Optional: set working directory
-  verbose: false // Optional: enable verbose logging
+  verbose: false, // Optional: enable verbose logging
+  oauth: { // Optional: OAuth credentials for token refresh
+    clientId: 'your-client-id',
+    clientSecret: 'your-client-secret'
+  }
 });
 ```
 
@@ -393,6 +397,32 @@ try {
 }
 ```
 
+### OAuth Token Management
+
+The SDK supports automatic OAuth token refresh when working with Claude Code CLI that uses OAuth authentication. When a token expires, the SDK will automatically attempt to refresh it using the provided OAuth credentials.
+
+```javascript
+// Initialize with OAuth credentials for automatic token refresh
+const claude = new ClaudeCode({
+  oauth: {
+    clientId: process.env.CLAUDE_CLIENT_ID,
+    clientSecret: process.env.CLAUDE_CLIENT_SECRET
+  }
+});
+
+// The SDK will automatically handle token refresh when needed
+// If the current token expires during a request, it will:
+// 1. Detect the expired token error
+// 2. Refresh the token using the OAuth credentials
+// 3. Retry the original request with the new token
+// 4. If OAuth credentials are not provided but needed, it will create them from the options
+
+// No additional error handling needed - token refresh happens transparently
+const response = await claude.chat({
+  prompt: 'Help me debug this error'
+});
+```
+
 ## TypeScript Support
 
 The SDK includes full TypeScript support with exported types:
@@ -442,7 +472,11 @@ const claude = new ClaudeCode({
   apiKey: 'your-api-key', // Optional: if already logged in via CLI
   model: 'claude-3-sonnet', // Optional: model to use
   workingDirectory: './path/to/project', // Optional: working directory
-  verbose: false // Optional: enable verbose output
+  verbose: false, // Optional: enable verbose output
+  oauth: { // Optional: OAuth credentials for automatic token refresh
+    clientId: 'your-client-id',
+    clientSecret: 'your-client-secret'
+  }
 });
 ```
 
