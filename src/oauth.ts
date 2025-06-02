@@ -39,10 +39,6 @@ export async function refreshToken(refreshToken: string): Promise<OAuthCredentia
     }),
   });
 
-  //   access_token: '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',
-  //   expires_in: 28800,
-  //   refresh_token: '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',
-
   if (response.ok) {
     const payload = await response.json() as any;
     return {
