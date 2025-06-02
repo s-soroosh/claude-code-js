@@ -2,14 +2,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ClaudeCode } from '../src/claude-code';
 import { executeCommand } from '../src/commands';
 import { Session } from '../src/session';
+import { attemptRefreshToken } from '../src/token';
 import type { ClaudeCodeMessage, ClaudeCodeOptions, PromptInput } from '../src/types';
 
 vi.mock('../src/commands');
 vi.mock('../src/session');
+vi.mock('../src/token');
 
 describe('ClaudeCode', () => {
   const mockExecuteCommand = vi.mocked(executeCommand);
   const mockSession = vi.mocked(Session);
+  const mockAttemptRefreshToken = vi.mocked(attemptRefreshToken);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -296,5 +299,124 @@ describe('ClaudeCode', () => {
 
       expect(result.message).toBeUndefined();
     });
+  });
+
+  describe('token refresh', () => {
+    const errorMessage: ClaudeCodeMessage = {
+      type: 'result',
+      subtype: 'success',
+      cost_usd: 0,
+      duration_ms: 100,
+      duration_api_ms: 0,
+      is_error: true,
+      num_turns: 0,
+      result: 'Invalid bearer token',
+      session_id: 'test-session-id',
+    };
+
+    it('should attempt refresh token on Invalid bearer token error', async () => {
+      mockExecuteCommand.mockResolvedValueOnce({
+        stdout: JSON.stringify(errorMessage),
+        stderr: '',
+        exitCode: 1,
+      });
+      mockAttemptRefreshToken.mockResolvedValueOnce(true);
+      mockExecuteCommand.mockResolvedValueOnce({
+        stdout: JSON.stringify({ ...errorMessage, is_error: false, result: 'Success after refresh' }),
+        stderr: '',
+        exitCode: 0,
+      });
+
+      const claude = new ClaudeCode();
+      const result = await claude.chat('Hello');
+
+      expect(console.log).toHaveBeenCalledWith('Invalid bearer token, refreshing...');
+      expect(mockAttemptRefreshToken).toHaveBeenCalledWith(undefined);
+      expect(mockExecuteCommand).toHaveBeenCalledTimes(2);
+      expect(result.success).toBe(true);
+      expect(result.message?.result).toBe('Success after refresh');
+    });
+
+    it('should attempt refresh token on OAuth error', async () => {
+      const oauthErrorMessage = { ...errorMessage, result: 'OAuth authentication failed' };
+      mockExecuteCommand.mockResolvedValueOnce({
+        stdout: JSON.stringify(oauthErrorMessage),
+        stderr: '',
+        exitCode: 1,
+      });
+      mockAttemptRefreshToken.mockResolvedValueOnce(true);
+      mockExecuteCommand.mockResolvedValueOnce({
+        stdout: JSON.stringify({ ...errorMessage, is_error: false, result: 'Success after refresh' }),
+        stderr: '',
+        exitCode: 0,
+      });
+
+      const claude = new ClaudeCode();
+      const result = await claude.chat('Hello');
+
+      expect(console.log).toHaveBeenCalledWith('Invalid bearer token, refreshing...');
+      expect(mockAttemptRefreshToken).toHaveBeenCalledWith(undefined);
+      expect(mockExecuteCommand).toHaveBeenCalledTimes(2);
+      expect(result.success).toBe(true);
+    });
+
+    it('should pass oauth options to attemptRefreshToken', async () => {
+      const oauthOptions = {
+        accessToken: 'test-access',
+        refreshToken: 'test-refresh',
+        expiresAt: Date.now() + 3600000
+      };
+      
+      mockExecuteCommand.mockResolvedValueOnce({
+        stdout: JSON.stringify(errorMessage),
+        stderr: '',
+        exitCode: 1,
+      });
+      mockAttemptRefreshToken.mockResolvedValueOnce(true);
+      mockExecuteCommand.mockResolvedValueOnce({
+        stdout: JSON.stringify({ ...errorMessage, is_error: false, result: 'Success' }),
+        stderr: '',
+        exitCode: 0,
+      });
+
+      const claude = new ClaudeCode({ oauth: oauthOptions });
+      await claude.chat('Hello');
+
+      expect(mockAttemptRefreshToken).toHaveBeenCalledWith(oauthOptions);
+    });
+
+    it('should not retry if refresh token fails', async () => {
+      mockExecuteCommand.mockResolvedValueOnce({
+        stdout: JSON.stringify(errorMessage),
+        stderr: '',
+        exitCode: 1,
+      });
+      mockAttemptRefreshToken.mockResolvedValueOnce(false);
+
+      const claude = new ClaudeCode();
+      const result = await claude.chat('Hello');
+
+      expect(mockAttemptRefreshToken).toHaveBeenCalledWith(undefined);
+      expect(mockExecuteCommand).toHaveBeenCalledTimes(1);
+      expect(result.success).toBe(false);
+      expect(result.error?.result).toBe('Invalid bearer token');
+    });
+
+    it('should not attempt refresh for non-auth errors', async () => {
+      const genericError = { ...errorMessage, result: 'Some other error' };
+      mockExecuteCommand.mockResolvedValueOnce({
+        stdout: JSON.stringify(genericError),
+        stderr: '',
+        exitCode: 1,
+      });
+
+      const claude = new ClaudeCode();
+      const result = await claude.chat('Hello');
+
+      expect(mockAttemptRefreshToken).not.toHaveBeenCalled();
+      expect(result.success).toBe(false);
+      expect(result.error?.result).toBe('Some other error');
+    });
+
   });
 });

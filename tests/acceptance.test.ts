@@ -3,7 +3,9 @@ import { ClaudeCode } from '../src';
 
 describe('acceptance', () => {
   it('should create a new session', async () => {
-    const claude = new ClaudeCode();
+    const claude = new ClaudeCode({
+      claudeCodePath: '/Users/soroosh/.claude/local/claude',
+    });
     const session1 = claude.newSession();
 
     const session1Message = await session1.prompt({
