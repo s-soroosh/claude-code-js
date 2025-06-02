@@ -32,8 +32,9 @@ const claude = new ClaudeCode({
   workingDirectory: './my-project', // Optional: set working directory
   verbose: false, // Optional: enable verbose logging
   oauth: { // Optional: OAuth credentials for token refresh
-    clientId: 'your-client-id',
-    clientSecret: 'your-client-secret'
+      accessToken: "ACCESS_TOKENID",
+      refreshToken: "REFRESH_TOKEN",
+      expiresAt: EXPIRES_AT_VALUE
   }
 });
 ```
@@ -489,8 +490,9 @@ const claude = new ClaudeCode({
   workingDirectory: './path/to/project', // Optional: working directory
   verbose: false, // Optional: enable verbose output
   oauth: { // Optional: OAuth credentials for automatic token refresh
-    clientId: 'your-client-id',
-    clientSecret: 'your-client-secret'
+      accessToken: "ACCESS_TOKENID",
+      refreshToken: "REFRESH_TOKEN",
+      expiresAt: EXPIRES_AT_VALUE
   }
 });
 ```
