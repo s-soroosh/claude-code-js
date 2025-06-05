@@ -2,6 +2,15 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Streaming Implementation
+
+The streaming feature has been successfully implemented with the following capabilities:
+- Real-time message-level streaming (Claude CLI streams complete messages, not individual tokens)
+- Full backward compatibility maintained
+- EventEmitter-based API for flexible event handling
+- Docker containerization support for Windows/WSL environments
+- Support for abort functionality
+
 ## Common Development Commands
 
 ### Build and Development
@@ -30,9 +39,10 @@ This is a TypeScript SDK wrapper for the claude-code CLI. The architecture follo
 
 1. **ClaudeCode Class** (`src/claude-code.ts`): Main entry point that wraps the claude CLI
    - Handles command construction with proper JSON output format
-   - Manages API key, model, and working directory options
-   - Provides methods: `chat()`, `newSession()`, `version()`
+   - Manages API key, OAuth tokens, model, working directory, and permissions options
+   - Provides methods: `chat()` (with streaming support), `newSession()`, `version()`
    - Uses execa for process execution
+   - Supports both API key and OAuth authentication methods
 
 2. **Session Class** (`src/session.ts`): Manages multi-turn conversations
    - Tracks session IDs and message history

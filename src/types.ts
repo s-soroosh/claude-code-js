@@ -4,6 +4,7 @@ export interface ClaudeCodeOptions {
   model?: string;
   workingDirectory?: string;
   verbose?: boolean;
+  dangerouslySkipPermissions?: boolean;
   oauth?: {
     accessToken: string;
     refreshToken: string;
@@ -56,3 +57,24 @@ export interface OAuthCredentials {
   refreshToken: string;
   expiresAt: number;
 }
+
+// Streaming types
+export interface StreamingOptions {
+  onToken?: (token: string) => void;
+  onComplete?: (result: string) => void;
+  onError?: (error: Error) => void;
+}
+
+export interface PromptWithStreaming extends Prompt, StreamingOptions {
+  stream: true;
+}
+
+export type PromptInputWithStreaming = PromptInput | PromptWithStreaming;
+
+export interface StreamingResponse extends NodeJS.EventEmitter {
+  result: Promise<string>;
+  abort: () => void;
+  sessionId?: string;
+}
+
+export type ClaudeResponse = ClaudeCodeResponse | StreamingResponse;

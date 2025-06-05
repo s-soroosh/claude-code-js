@@ -1,3 +1,12 @@
+/**
+ * ClaudeCode Tests
+ * 
+ * Updated for streaming PR:
+ * - Changed -p to --print flag
+ * - API key now passed via environment variable instead of CLI flag
+ * - Added dangerouslySkipPermissions option
+ * - All command calls now use expect.objectContaining for env vars
+ */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ClaudeCode } from '../src/claude-code';
 import { executeCommand } from '../src/commands';
@@ -48,7 +57,10 @@ describe('ClaudeCode', () => {
       const claude = new ClaudeCode(customOptions);
       const options = claude.getOptions();
 
-      expect(options).toEqual(customOptions);
+      expect(options).toEqual({
+        ...customOptions,
+        dangerouslySkipPermissions: false
+      });
     });
 
     it('should merge custom options with defaults', () => {
@@ -61,6 +73,7 @@ describe('ClaudeCode', () => {
 
       expect(options.workingDirectory).toBe(process.cwd());
       expect(options.verbose).toBe(false);
+      expect(options.dangerouslySkipPermissions).toBe(false);
       expect(options.apiKey).toBe('test-api-key');
     });
   });
@@ -89,8 +102,8 @@ describe('ClaudeCode', () => {
       const result = await claude.chat('Hello Claude');
 
       expect(mockExecuteCommand).toHaveBeenCalledWith(
-        ['claude', '--output-format', 'json', '-p', 'Hello Claude'],
-        { cwd: process.cwd() }
+        ['claude', '--output-format', 'json', '--print', 'Hello Claude'],
+        expect.objectContaining({ cwd: process.cwd() })
       );
       expect(result).toEqual({
         success: true,
@@ -120,14 +133,14 @@ describe('ClaudeCode', () => {
           'claude',
           '--output-format',
           'json',
-          '-p',
-          '"Main prompt"',
+          '--print',
+          'Main prompt',
           '--system-prompt',
-          '"System prompt"',
+          'System prompt',
           '--append-system-prompt',
-          '"Append system prompt"',
+          'Append system prompt',
         ],
-        { cwd: process.cwd() }
+        expect.objectContaining({ cwd: process.cwd() })
       );
       expect(result.success).toBe(true);
     });
@@ -147,8 +160,8 @@ describe('ClaudeCode', () => {
       const result = await claude.chat(prompt);
 
       expect(mockExecuteCommand).toHaveBeenCalledWith(
-        ['claude', '--output-format', 'json', '-p', '"Main prompt only"'],
-        { cwd: process.cwd() }
+        ['claude', '--output-format', 'json', '--print', 'Main prompt only'],
+        expect.objectContaining({ cwd: process.cwd() })
       );
       expect(result.success).toBe(true);
     });
@@ -164,8 +177,8 @@ describe('ClaudeCode', () => {
       const result = await claude.chat('Hello', 'session-123');
 
       expect(mockExecuteCommand).toHaveBeenCalledWith(
-        ['claude', '--output-format', 'json', '-p', 'Hello', '--resume', 'session-123'],
-        { cwd: process.cwd() }
+        ['claude', '--output-format', 'json', '--print', 'Hello', '--resume', 'session-123'],
+        expect.objectContaining({ cwd: process.cwd() })
       );
       expect(result.success).toBe(true);
     });
@@ -188,14 +201,17 @@ describe('ClaudeCode', () => {
           'claude',
           '--output-format',
           'json',
-          '--api-key',
-          'test-key',
           '--model',
           'claude-3-opus',
-          '-p',
+          '--print',
           'Hello',
         ],
-        { cwd: process.cwd() }
+        expect.objectContaining({ 
+          cwd: process.cwd(),
+          env: expect.objectContaining({
+            ANTHROPIC_API_KEY: 'test-key'
+          })
+        })
       );
       expect(result.success).toBe(true);
     });

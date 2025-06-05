@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Streaming Demo</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .input-section {
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+            height: 100px;
+        }
+        .output-section {
+            margin-top: 20px;
+        }
+        #output {
+            height: 400px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f8f8f8;
+            white-space: pre-wrap;
+            overflow-y: auto;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .options {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .status.info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        select {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Claude Code Streaming Demo</h1>
+        <p style="margin: 10px 0; color: #666; font-size: 14px;">
+            Note: Claude CLI streams complete messages, not individual tokens. 
+            For complex multi-step tasks, you'll see multiple messages streamed as Claude completes each step.
+        </p>
+        
+        <div class="input-section">
+            <h3>Enter your prompt:</h3>
+            <textarea id="promptInput" placeholder="Ask Claude anything...">What is 2 + 2?</textarea>
+            
+            <div class="options">
+                <label>
+                    <input type="checkbox" id="streamingMode" checked>
+                    Enable streaming
+                </label>
+                <label>
+                    <input type="checkbox" id="skipPermissions">
+                    Skip Permissions (for containers)
+                </label>
+                <label>
+                    Model:
+                    <select id="modelSelect">
+                        <option value="">Default</option>
+                        <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+                        <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
+                    </select>
+                </label>
+            </div>
+            
+            <div class="controls">
+                <button id="sendButton">Send Message</button>
+                <button id="stopButton" style="display: none;">Stop</button>
+                <button id="clearButton">Clear Output</button>
+            </div>
+            
+            <div id="status" class="status"></div>
+        </div>
+
+        <div class="output-section">
+            <h3>Response:</h3>
+            <div id="output"></div>
+        </div>
+    </div>
+
+    <script>
+        const promptInput = document.getElementById('promptInput');
+        const output = document.getElementById('output');
+        const sendButton = document.getElementById('sendButton');
+        const stopButton = document.getElementById('stopButton');
+        const clearButton = document.getElementById('clearButton');
+        const status = document.getElementById('status');
+        const streamingMode = document.getElementById('streamingMode');
+        const skipPermissions = document.getElementById('skipPermissions');
+        const modelSelect = document.getElementById('modelSelect');
+        
+        let eventSource = null;
+
+        function showStatus(message, type = 'info') {
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
+
+        function hideStatus() {
+            status.style.display = 'none';
+        }
+
+        function clearOutput() {
+            output.textContent = '';
+            hideStatus();
+        }
+
+        async function sendMessage() {
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                showStatus('Please enter a prompt', 'error');
+                return;
+            }
+
+            sendButton.disabled = true;
+            stopButton.style.display = streamingMode.checked ? 'inline-block' : 'none';
+            clearOutput();
+            
+            const params = new URLSearchParams({
+                prompt: prompt,
+                stream: streamingMode.checked,
+                model: modelSelect.value,
+                skipPermissions: skipPermissions.checked
+            });
+
+            if (streamingMode.checked) {
+                showStatus('Connecting to Claude...', 'info');
+                
+                eventSource = new EventSource(`/chat?${params}`);
+                
+                eventSource.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'token') {
+                        output.textContent += data.content;
+                        output.scrollTop = output.scrollHeight;
+                        showStatus('Receiving response...', 'info');
+                    } else if (data.type === 'complete') {
+                        showStatus('Response complete', 'success');
+                        cleanup();
+                    } else if (data.type === 'error') {
+                        showStatus(`Error: ${data.message}`, 'error');
+                        cleanup();
+                    }
+                };
+
+                eventSource.onerror = (error) => {
+                    showStatus('Connection error', 'error');
+                    cleanup();
+                };
+            } else {
+                showStatus('Sending message...', 'info');
+                
+                try {
+                    const response = await fetch(`/chat?${params}`);
+                    const data = await response.json();
+                    
+                    if (data.error) {
+                        showStatus(`Error: ${data.error}`, 'error');
+                    } else {
+                        output.textContent = data.result;
+                        output.scrollTop = output.scrollHeight;
+                        showStatus('Response complete', 'success');
+                        
+                        if (data.debug) {
+                            console.log('Debug info:', data.debug);
+                        }
+                    }
+                } catch (error) {
+                    showStatus(`Error: ${error.message}`, 'error');
+                } finally {
+                    cleanup();
+                }
+            }
+        }
+
+        function stopStreaming() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+                showStatus('Streaming stopped', 'info');
+                cleanup();
+            }
+        }
+
+        function cleanup() {
+            sendButton.disabled = false;
+            stopButton.style.display = 'none';
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        stopButton.addEventListener('click', stopStreaming);
+        clearButton.addEventListener('click', clearOutput);
+        
+        promptInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

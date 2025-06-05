@@ -41,3 +41,17 @@ lerna-debug.log*
 # Temporary files
 tmp/
 temp/
+
+# Test files at root
+test-*.js
+test-*.mjs
+
+# Claude CLI debug logs
+claude-cli-debug-*.log
+
+# Example build outputs
+example/*/dist/
+
+# Docker-specific files
+docker-build/
+*.swp

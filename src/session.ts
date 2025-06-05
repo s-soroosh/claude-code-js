@@ -20,12 +20,21 @@ export class Session {
 
   async prompt(prompt: PromptInput): Promise<ClaudeCodeMessage> {
     const response = await this.claudeCode.chat(prompt, this._sessionIds.at(-1));
-    if (response.message) {
-      this._messages.push(response.message);
-      this._sessionIds.push(response.message.session_id);
-      return response.message;
+    
+    // Check if it's a streaming response
+    if ('on' in response && 'result' in response) {
+      // For streaming, we don't support sessions yet
+      throw new Error('Streaming is not supported in sessions. Use claude.chat() directly for streaming.');
+    }
+    
+    // Handle non-streaming response
+    const codeResponse = response as any;
+    if (codeResponse.message) {
+      this._messages.push(codeResponse.message);
+      this._sessionIds.push(codeResponse.message.session_id);
+      return codeResponse.message;
     } else {
-      console.error('Error in the prompt:', { error: response.error });
+      console.error('Error in the prompt:', { error: codeResponse.error });
       throw new Error('No message returned from Claude');
     }
   }

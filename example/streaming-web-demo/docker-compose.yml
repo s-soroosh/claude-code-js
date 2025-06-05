@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  streaming-demo:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - HOME=/home/node
+    volumes:
+      # Mount Claude credentials
+      - ~/.claude:/home/node/.claude:ro
+    restart: unless-stopped

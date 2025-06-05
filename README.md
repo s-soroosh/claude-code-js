@@ -2,9 +2,19 @@
 
 A JavaScript SDK for integrating with Claude Code, Anthropic's official CLI tool for Claude.
 
+> **🚀 Streaming Support**: This version includes full streaming support for real-time responses from Claude CLI. See the [Streaming Responses](#streaming-responses) section for details.
+
 ## Overview
 
 This project provides a JavaScript/TypeScript SDK that allows developers to programmatically interact with Claude Code, enabling AI-powered software engineering capabilities in their applications.
+
+**Key Features:**
+- Full TypeScript support with comprehensive type definitions
+- Session management for multi-turn conversations
+- Streaming support for real-time responses
+- OAuth token management with automatic refresh
+- Docker/container support with permission skip option
+- Clean API wrapper around the Claude CLI
 
 ## Installation
 
@@ -18,6 +28,43 @@ or with yarn:
 yarn add claude-code-js
 ```
 
+## Authentication
+
+claude-code-js supports two authentication methods:
+
+### 1. API Key Authentication
+The simplest method - just provide your Anthropic API key:
+
+```javascript
+const claude = new ClaudeCode({
+  apiKey: process.env.ANTHROPIC_API_KEY
+});
+```
+
+### 2. OAuth Token Authentication
+If you're logged into Claude CLI via browser authentication, the SDK can use your existing OAuth tokens. These tokens are stored in your home directory at `~/.claude/` (or `%USERPROFILE%\.claude\` on Windows).
+
+```javascript
+// The SDK will automatically use tokens from ~/.claude/auth.json
+const claude = new ClaudeCode();
+
+// Or manually provide OAuth credentials with auto-refresh support
+const claude = new ClaudeCode({
+  oauth: {
+    accessToken: "your-access-token",
+    refreshToken: "your-refresh-token", 
+    expiresAt: 1234567890 // Unix timestamp
+  }
+});
+```
+
+The SDK will automatically refresh expired tokens using the refresh token when needed.
+
+### Finding Your OAuth Tokens
+If you're logged into Claude CLI, your tokens are stored at:
+- Linux/Mac: `~/.claude/auth.json`
+- Windows: `%USERPROFILE%\.claude\auth.json`
+
 ## Quick Start
 
 ### Basic Setup
@@ -27,15 +74,9 @@ import { ClaudeCode } from 'claude-code-js';
 
 // Initialize the SDK
 const claude = new ClaudeCode({
-  apiKey: process.env.CLAUDE_API_KEY, // Optional: if already logged in
   model: 'claude-3-sonnet', // Optional: specify model
   workingDirectory: './my-project', // Optional: set working directory
   verbose: false, // Optional: enable verbose logging
-  oauth: { // Optional: OAuth credentials for token refresh
-      accessToken: "ACCESS_TOKENID",
-      refreshToken: "REFRESH_TOKEN",
-      expiresAt: EXPIRES_AT_VALUE
-  }
 });
 ```
 
@@ -58,6 +99,37 @@ if (response.success) {
 } else {
   console.error('Error:', response.error.message);
 }
+```
+
+#### Streaming Responses
+
+```javascript
+// Enable streaming for real-time responses
+const response = await claude.chat({
+  prompt: 'Write a haiku about JavaScript',
+  stream: true,
+  onToken: (token) => {
+    // Called for each token as it arrives
+    process.stdout.write(token);
+  },
+  onComplete: (result) => {
+    console.log('\nStreaming complete!');
+  },
+  onError: (error) => {
+    console.error('Streaming error:', error);
+  }
+});
+
+// The response is an EventEmitter with additional methods
+response.on('debug', (event) => {
+  console.log('Debug event:', event);
+});
+
+// Abort the stream if needed
+response.abort();
+
+// Wait for the complete result
+const fullResponse = await response.result;
 ```
 
 #### Sessions for Multi-turn Conversations
@@ -485,16 +557,66 @@ if (response.success && response.message) {
 
 ```javascript
 const claude = new ClaudeCode({
-  apiKey: 'your-api-key', // Optional: if already logged in via CLI
+  // Authentication (choose one or let it use ~/.claude/auth.json)
+  apiKey: 'your-api-key', // Option 1: Direct API key
+  oauth: { // Option 2: OAuth with auto-refresh
+      accessToken: "ACCESS_TOKEN",
+      refreshToken: "REFRESH_TOKEN", 
+      expiresAt: 1234567890 // Unix timestamp
+  },
+  
+  // Other options
   model: 'claude-3-sonnet', // Optional: model to use
   workingDirectory: './path/to/project', // Optional: working directory
   verbose: false, // Optional: enable verbose output
-  oauth: { // Optional: OAuth credentials for automatic token refresh
-      accessToken: "ACCESS_TOKENID",
-      refreshToken: "REFRESH_TOKEN",
-      expiresAt: EXPIRES_AT_VALUE
-  }
+  dangerouslySkipPermissions: false, // Optional: skip permission checks (for containers)
 });
+```
+
+**Note**: If neither `apiKey` nor `oauth` is provided, the SDK will attempt to use the Claude CLI's existing authentication from `~/.claude/auth.json`.
+
+## Docker/Container Support
+
+The SDK includes support for running in containerized environments where file system permissions might be restricted.
+
+### Using with Docker
+
+When running in Docker containers, you may need to enable the `dangerouslySkipPermissions` option:
+
+```javascript
+const claude = new ClaudeCode({
+  dangerouslySkipPermissions: true, // Skip permission checks in containers
+  workingDirectory: '/tmp' // Use a writable directory
+});
+```
+
+### OAuth Tokens in Docker
+
+To use OAuth authentication in Docker, mount your local `.claude` directory as a volume:
+
+```yaml
+# docker-compose.yml
+services:
+  app:
+    build: .
+    volumes:
+      # Mount OAuth tokens from host machine
+      - ~/.claude:/home/node/.claude:ro
+    environment:
+      - HOME=/home/node
+```
+
+This allows the containerized app to use your existing Claude CLI authentication without exposing API keys in the image.
+
+### Example Docker Setup
+
+See the `example/streaming-web-demo` directory for a complete Docker example:
+
+```dockerfile
+FROM node:20-slim
+RUN npm install -g @anthropic-ai/claude-code
+# ... your app setup
+USER node  # Run as non-root user
 ```
 
 ## Contributing
