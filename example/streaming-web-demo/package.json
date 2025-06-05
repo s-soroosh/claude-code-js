@@ -1,0 +1,13 @@
+{
+  "name": "claude-code-streaming-demo",
+  "version": "1.0.0",
+  "description": "Web demo for claude-code-js streaming",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "claude-code-js": "file:../.."
+  }
+}

@@ -1,0 +1,16 @@
+services:
+  streaming-demo:
+    build:
+      context: ../..
+      dockerfile: example/streaming-web-demo/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - HOME=/home/node
+    volumes:
+      # Mount Claude credentials (read-write for CLI to update state)
+      - ~/.claude:/home/node/.claude
+      # Mount workspace directory for Claude to write files
+      - ./workspace:/workspace
+    restart: unless-stopped

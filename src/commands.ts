@@ -1,4 +1,4 @@
-import { execa, type ResultPromise } from 'execa';
+import { execa } from 'execa';
 import { CommandOptions } from './types';
 
 export async function executeCommand(
@@ -9,7 +9,12 @@ export async function executeCommand(
 
   const result = await execa(cmd, args, {
     cwd: options.cwd,
-    env: options.env,
+    env: {
+      ...options.env,
+      CI: 'true',  // Prevent interactive mode
+      TERM: 'dumb', // Indicate non-interactive terminal
+      NO_COLOR: '1' // Disable color output
+    },
     timeout: options.timeout,
     shell: options.shell,
     stdin: 'ignore',
@@ -24,7 +29,7 @@ export async function executeCommand(
   };
 }
 
-export function streamCommand(command: string[], options: CommandOptions = {}): ResultPromise {
+export function streamCommand(command: string[], options: CommandOptions = {}): any {
   const [cmd, ...args] = command;
 
   return execa(cmd, args, {
