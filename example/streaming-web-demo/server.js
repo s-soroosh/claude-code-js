@@ -15,6 +15,35 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Test endpoint to check permissions
+app.get('/test-permissions', async (req, res) => {
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execPromise = util.promisify(exec);
+    
+    try {
+        // Test direct CLI command with permissions flag
+        const { stdout, stderr } = await execPromise(
+            'claude --dangerously-skip-permissions --output-format json --print "List files in current directory"',
+            { cwd: '/workspace' }
+        );
+        
+        res.json({
+            success: true,
+            stdout: stdout,
+            stderr: stderr,
+            cwd: process.cwd()
+        });
+    } catch (error) {
+        res.json({
+            success: false,
+            error: error.message,
+            stdout: error.stdout,
+            stderr: error.stderr
+        });
+    }
+});
+
 // Chat endpoint that supports both streaming and non-streaming
 app.get('/chat', async (req, res) => {
     const { prompt, stream, model, skipPermissions } = req.query;
@@ -29,7 +58,7 @@ app.get('/chat', async (req, res) => {
         model: model || undefined,
         verbose: true,
         dangerouslySkipPermissions: skipPermissions === 'true',
-        workingDirectory: '/tmp'
+        workingDirectory: '/workspace'
     });
 
     if (stream === 'true') {
@@ -100,10 +129,25 @@ app.get('/chat', async (req, res) => {
                 });
 
                 // Handle client disconnect
+                let completed = false;
+                response.on('complete', () => {
+                    completed = true;
+                });
+                
                 req.on('close', () => {
                     console.log(`[${new Date().toISOString()}] Client disconnected`);
-                    if (response && response.abort) {
+                    // Only abort if not already completed
+                    if (response && response.abort && !completed) {
                         response.abort();
+                    }
+                });
+                
+                // Catch any abort errors to prevent server crash
+                response.result.catch(err => {
+                    if (err.message === 'Stream aborted by user') {
+                        console.log(`[${new Date().toISOString()}] Stream aborted (client disconnected)`);
+                    } else {
+                        console.error(`[${new Date().toISOString()}] Stream error:`, err);
                     }
                 });
             } else {

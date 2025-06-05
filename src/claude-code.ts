@@ -13,7 +13,7 @@ import { executeCommand } from './commands';
 import { Session } from './session';
 import { attemptRefreshToken } from './token';
 import { EventEmitter } from 'events';
-import execa = require('execa');
+import { execa } from 'execa';
 
 export class ClaudeCode {
   private options: ClaudeCodeOptions;
@@ -140,6 +140,11 @@ export class ClaudeCode {
     const env = { ...process.env };
     if (this.options.apiKey) {
       env.ANTHROPIC_API_KEY = this.options.apiKey;
+    }
+
+    // Debug logging for streaming
+    if (this.options.verbose) {
+      console.log('ClaudeCode._streamChat - command args:', args);
     }
 
     // Start the process

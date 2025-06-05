@@ -1,4 +1,4 @@
-import execa = require('execa');
+import { execa } from 'execa';
 import { CommandOptions } from './types';
 
 export async function executeCommand(

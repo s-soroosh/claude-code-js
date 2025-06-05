@@ -129,7 +129,7 @@
                     Enable streaming
                 </label>
                 <label>
-                    <input type="checkbox" id="skipPermissions">
+                    <input type="checkbox" id="skipPermissions" checked>
                     Skip Permissions (for containers)
                 </label>
                 <label>
@@ -199,9 +199,13 @@
             const params = new URLSearchParams({
                 prompt: prompt,
                 stream: streamingMode.checked,
-                model: modelSelect.value,
-                skipPermissions: skipPermissions.checked
+                model: modelSelect.value
             });
+            
+            // Only add skipPermissions if it's checked
+            if (skipPermissions.checked) {
+                params.set('skipPermissions', 'true');
+            }
 
             if (streamingMode.checked) {
                 showStatus('Connecting to Claude...', 'info');
