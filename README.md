@@ -45,7 +45,7 @@ const claude = new ClaudeCode({
 If you're logged into Claude CLI via browser authentication, the SDK can use your existing OAuth tokens. These tokens are stored in your home directory at `~/.claude/` (or `%USERPROFILE%\.claude\` on Windows).
 
 ```javascript
-// The SDK will automatically use tokens from ~/.claude/auth.json
+// The SDK will automatically use tokens from ~/.claude/.credentials.json
 const claude = new ClaudeCode();
 
 // Or manually provide OAuth credentials with auto-refresh support
@@ -62,8 +62,8 @@ The SDK will automatically refresh expired tokens using the refresh token when n
 
 ### Finding Your OAuth Tokens
 If you're logged into Claude CLI, your tokens are stored at:
-- Linux/Mac: `~/.claude/auth.json`
-- Windows: `%USERPROFILE%\.claude\auth.json`
+- Linux/Mac: `~/.claude/.credentials.json`
+- Windows: `%USERPROFILE%\.claude\.credentials.json`
 
 ## Quick Start
 
@@ -573,7 +573,7 @@ const claude = new ClaudeCode({
 });
 ```
 
-**Note**: If neither `apiKey` nor `oauth` is provided, the SDK will attempt to use the Claude CLI's existing authentication from `~/.claude/auth.json`.
+**Note**: If neither `apiKey` nor `oauth` is provided, the SDK will attempt to use the Claude CLI's existing authentication from `~/.claude/.credentials.json`.
 
 ## Docker/Container Support
 

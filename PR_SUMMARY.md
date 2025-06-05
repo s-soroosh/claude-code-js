@@ -13,7 +13,7 @@ This PR adds comprehensive streaming support to the claude-code-js SDK, enabling
 - Full backward compatibility with existing non-streaming API
 
 ### 2. **OAuth Authentication Support**
-- Automatic use of existing Claude CLI authentication from `~/.claude/auth.json`
+- Automatic use of existing Claude CLI authentication from `~/.claude/.credentials.json`
 - Manual OAuth token configuration with automatic refresh
 - Clear documentation on finding and using OAuth tokens
 - Works seamlessly in Docker containers by mounting the `.claude` directory
